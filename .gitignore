@@ -1,0 +1,11 @@
+bin/
+obj/
+.vs/
+.vscode/
+.DS_Store
+*.user
+*.suo
+supabase/.temp/
+supabase/.branches/
+.env
+.env.local

@@ -1,0 +1,10 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/ArtFind.Core/ArtFind.Core.csproj" />
+    <Project Path="src/ArtFind.Sync/ArtFind.Sync.csproj" />
+    <Project Path="src/ArtFind.Web/ArtFind.Web.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/ArtFind.Core.Tests/ArtFind.Core.Tests.csproj" />
+  </Folder>
+</Solution>
