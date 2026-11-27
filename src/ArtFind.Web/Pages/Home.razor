@@ -1,7 +1,248 @@
 ﻿@page "/"
+@inject IArtistCatalogService CatalogService
+@inject CommissionMatcher Matcher
 
-<PageTitle>Home</PageTitle>
+<header class="topbar">
+    <div class="topbar-inner">
+        <div class="brand">
+            <span class="brand-name">ArtFind</span>
+            <span class="brand-tag">Open-for-Commission Visual Artists</span>
+        </div>
 
-<h1>Hello, world!</h1>
+        <div class="topbar-actions">
+            <span class="status-pill" title="Active data backend">
+                <span class="status-dot"></span>
+                @(CatalogService.IsUsingSupabase ? "Supabase Live" : "Bluesky Snapshot")
+            </span>
+            <button type="button" class="btn btn-ghost" @onclick="() => _showOptOut = true">
+                Artist Opt-Out
+            </button>
+        </div>
+    </div>
+</header>
 
-Welcome to your new app.
+<main class="container">
+    <section class="hero">
+        <h1 class="hero-title">
+            Find an illustrator who is <em>open right now</em>.
+        </h1>
+        <p class="hero-subtitle">
+            Describe your Commission Brief, filter by style or budget, and jump straight to the Artist Page to commission them directly.
+        </p>
+    </section>
+
+    <section class="brief-panel" aria-label="Commission Brief and Filters">
+        <div class="brief-input-row">
+            <input class="brief-input"
+                   type="search"
+                   placeholder="Describe what you're looking for… e.g. anime fantasy character portrait, chibi Twitch emotes, pixel art"
+                   @bind="_query"
+                   @bind:event="oninput" />
+
+            @if (HasActiveFilters)
+            {
+                <button type="button" class="btn btn-ghost" @onclick="ResetFilters">
+                    Clear
+                </button>
+            }
+        </div>
+
+        <div class="brief-controls">
+            <select class="filter-select" @bind="_selectedCategory" aria-label="Filter by category">
+                <option value="">All Categories</option>
+                @foreach (var cat in AvailableCategories)
+                {
+                    <option value="@cat">@FormatTag(cat)</option>
+                }
+            </select>
+
+            <select class="filter-select" @bind="_maxBudgetValue" aria-label="Filter by maximum budget">
+                <option value="">Any Budget</option>
+                <option value="30">Up to $30</option>
+                <option value="60">Up to $60</option>
+                <option value="120">Up to $120</option>
+                <option value="250">Up to $250</option>
+            </select>
+
+            <select class="filter-select" @bind="_selectedPageType" aria-label="Filter by Artist Page platform">
+                <option value="">Any Artist Page</option>
+                <option value="VGen">VGen</option>
+                <option value="Carrd">Carrd</option>
+                <option value="Kofi">Ko-fi</option>
+                <option value="Artistree">Artistree</option>
+                <option value="Portfolio">Portfolio</option>
+                <option value="Bluesky">Bluesky</option>
+            </select>
+
+            <label style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.8rem; color: var(--ink-secondary); margin-left: auto; cursor: pointer;">
+                <input type="checkbox" @bind="_includeNsfw" />
+                Include 18+ tagged
+            </label>
+        </div>
+
+        @if (AvailableStyles.Count > 0)
+        {
+            <div class="chip-row" role="group" aria-label="Style tags">
+                @foreach (var style in AvailableStyles)
+                {
+                    var isActive = _selectedStyles.Contains(style);
+                    <button type="button"
+                            class="chip @(isActive ? "active" : "")"
+                            @onclick="() => ToggleStyle(style)">
+                        @FormatTag(style)
+                    </button>
+                }
+            </div>
+        }
+    </section>
+
+    <div class="results-bar">
+        <span>
+            @if (_loading)
+            {
+                <text>Loading open artists…</text>
+            }
+            else
+            {
+                <strong>@Matches.Count</strong> <text>open @(Matches.Count == 1 ? "artist" : "artists") matched</text>
+                @if (_snapshot is not null)
+                {
+                    <text> · indexed @_snapshot.GeneratedAt.ToLocalTime().ToString("MMM d, HH:mm")</text>
+                }
+            }
+        </span>
+        <span>Redirects directly to each Artist Page</span>
+    </div>
+
+    @if (_loading)
+    {
+        <div class="empty-state">
+            <p style="margin: 0; color: var(--ink-muted);">Fetching open-for-commission artists…</p>
+        </div>
+    }
+    else if (Matches.Count == 0)
+    {
+        <div class="empty-state">
+            <h2 style="margin: 0 0 8px; font-family: 'Instrument Serif', Georgia, serif; font-size: 1.7rem; font-weight: 400;">
+                No matching open artists right now
+            </h2>
+            <p style="margin: 0 0 16px; color: var(--ink-secondary); font-size: 0.9rem;">
+                Try broadening your Commission Brief or clearing one of the filters.
+            </p>
+            <button type="button" class="btn btn-primary" @onclick="ResetFilters">Reset Filters</button>
+        </div>
+    }
+    else
+    {
+        <section class="gallery-grid" aria-label="Matched Artists">
+            @foreach (var match in Matches)
+            {
+                <ArtistCard @key="match.Artist.Id"
+                            Match="match"
+                            OnInspect="m => _inspectedMatch = m" />
+            }
+        </section>
+    }
+</main>
+
+<footer class="footer">
+    <div class="footer-inner">
+        <span>ArtFind promotes public open-for-commission artists via Bluesky AT Protocol. No full-res artwork is re-hosted.</span>
+        <span>Are you an artist? Add <code>#noartfind</code> to your bio or use Artist Opt-Out anytime.</span>
+    </div>
+</footer>
+
+<ArtistSheet Match="_inspectedMatch" OnClose="() => _inspectedMatch = null" />
+<OptOutModal IsOpen="_showOptOut" OnClose="() => _showOptOut = false" OnSubmitted="HandleOptOutAsync" />
+
+@code {
+    private ArtistCatalogSnapshot? _snapshot;
+    private bool _loading = true;
+    private string _query = string.Empty;
+    private string _selectedCategory = string.Empty;
+    private string _maxBudgetValue = string.Empty;
+    private string _selectedPageType = string.Empty;
+    private bool _includeNsfw;
+    private readonly HashSet<string> _selectedStyles = new(StringComparer.OrdinalIgnoreCase);
+
+    private ArtistMatch? _inspectedMatch;
+    private bool _showOptOut;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _snapshot = await CatalogService.LoadCatalogAsync();
+        _loading = false;
+    }
+
+    private IReadOnlyList<string> AvailableStyles =>
+        (_snapshot?.Artists ?? [])
+            .SelectMany(a => a.StyleTags)
+            .GroupBy(t => t, StringComparer.OrdinalIgnoreCase)
+            .OrderByDescending(g => g.Count())
+            .Select(g => g.Key)
+            .Take(10)
+            .ToList();
+
+    private IReadOnlyList<string> AvailableCategories =>
+        (_snapshot?.Artists ?? [])
+            .SelectMany(a => a.CategoryTags)
+            .GroupBy(t => t, StringComparer.OrdinalIgnoreCase)
+            .OrderByDescending(g => g.Count())
+            .Select(g => g.Key)
+            .ToList();
+
+    private bool HasActiveFilters =>
+        !string.IsNullOrWhiteSpace(_query) ||
+        _selectedStyles.Count > 0 ||
+        !string.IsNullOrWhiteSpace(_selectedCategory) ||
+        !string.IsNullOrWhiteSpace(_maxBudgetValue) ||
+        !string.IsNullOrWhiteSpace(_selectedPageType) ||
+        _includeNsfw;
+
+    private IReadOnlyList<ArtistMatch> Matches
+    {
+        get
+        {
+            if (_snapshot is null) return [];
+
+            var brief = new CommissionBrief
+            {
+                Query = _query,
+                StyleTags = _selectedStyles.ToList(),
+                CategoryTags = string.IsNullOrWhiteSpace(_selectedCategory) ? [] : [_selectedCategory],
+                MaxBudgetUsd = int.TryParse(_maxBudgetValue, out var budget) ? budget : null,
+                PreferredPageType = Enum.TryParse<ArtistPageType>(_selectedPageType, out var pt) ? pt : null,
+                IncludeNsfw = _includeNsfw,
+                OpenOnly = true
+            };
+
+            return Matcher.Match(_snapshot.Artists, brief);
+        }
+    }
+
+    private void ToggleStyle(string style)
+    {
+        if (!_selectedStyles.Add(style))
+            _selectedStyles.Remove(style);
+    }
+
+    private void ResetFilters()
+    {
+        _query = string.Empty;
+        _selectedCategory = string.Empty;
+        _maxBudgetValue = string.Empty;
+        _selectedPageType = string.Empty;
+        _includeNsfw = false;
+        _selectedStyles.Clear();
+    }
+
+    private async Task HandleOptOutAsync((string Handle, string? Reason) request)
+    {
+        await CatalogService.SubmitOptOutAsync(request.Handle, request.Reason);
+        _snapshot = await CatalogService.LoadCatalogAsync();
+    }
+
+    private static string FormatTag(string raw) =>
+        string.Join(' ', raw.Split('-', StringSplitOptions.RemoveEmptyEntries)
+            .Select(w => char.ToUpperInvariant(w[0]) + w[1..]));
+}

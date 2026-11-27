@@ -4,30 +4,31 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ArtFind.Web</title>
+    <title>ArtFind — Visual Artists Open for Commissions</title>
+    <meta name="description" content="Discover visual illustrators and digital artists currently open for commissions, matched to your Commission Brief and linked directly to their Artist Page." />
     <base href="/" />
-    <link rel="preload" id="webassembly" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="css/app.css" />
-    <!-- If you add any scoped CSS files, uncomment the following to load them
-    <link href="ArtFind.Web.styles.css" rel="stylesheet" /> -->
-    <script type="importmap"></script>
+    <link rel="icon" type="image/png" href="icon-192.png" />
 </head>
 
 <body>
     <div id="app">
-        <svg class="loading-progress">
-            <circle r="40%" cx="50%" cy="50%" />
-            <circle r="40%" cx="50%" cy="50%" />
-        </svg>
-        <div class="loading-progress-text"></div>
+        <div class="boot-loader">
+            <div class="boot-mark">ArtFind</div>
+            <div class="boot-sub">Loading open commission artists…</div>
+        </div>
     </div>
 
-    <div id="blazor-error-ui">
+    <div id="blazor-error-ui" class="blazor-error-bar">
         An unhandled error has occurred.
         <a href="." class="reload">Reload</a>
-        <span class="dismiss">🗙</span>
+        <span class="dismiss">✕</span>
     </div>
-    <script src="_framework/blazor.webassembly#[.{fingerprint}].js"></script>
+
+    <script src="_framework/blazor.webassembly.js"></script>
 </body>
 
 </html>

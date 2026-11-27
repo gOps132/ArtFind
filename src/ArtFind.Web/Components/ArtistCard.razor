@@ -1,0 +1,125 @@
+<article class="artist-card">
+    <div class="card-media" @onclick="() => OnInspect.InvokeAsync(Match)" role="button" tabindex="0" aria-label="Preview @Artist.DisplayName artwork">
+        @if (CurrentPreview is not null)
+        {
+            <img src="@CurrentPreview.ThumbnailUrl"
+                 alt="@(string.IsNullOrWhiteSpace(CurrentPreview.AltText) ? $"{Artist.DisplayName} commission sample" : CurrentPreview.AltText)"
+                 loading="lazy"
+                 decoding="async" />
+        }
+
+        <div class="media-badge-row">
+            <span class="open-badge">
+                <span class="status-dot" aria-hidden="true"></span>
+                Open
+            </span>
+
+            @if (Artist.PriceRange is not null)
+            {
+                <span class="price-badge">@Artist.PriceRange.RawText</span>
+            }
+        </div>
+
+        @if (Artist.Previews.Count > 1)
+        {
+            <div class="thumb-dots" @onclick:stopPropagation="true">
+                @for (var i = 0; i < Artist.Previews.Count; i++)
+                {
+                    var idx = i;
+                    <button type="button"
+                            class="thumb-dot @(idx == _activeIndex ? "active" : "")"
+                            aria-label="Show sample @(idx + 1)"
+                            @onclick="() => _activeIndex = idx"
+                            @onmouseenter="() => _activeIndex = idx">
+                    </button>
+                }
+            </div>
+        }
+    </div>
+
+    <div class="card-body">
+        <div class="artist-header">
+            @if (!string.IsNullOrWhiteSpace(Artist.AvatarUrl))
+            {
+                <img class="avatar" src="@Artist.AvatarUrl" alt="" loading="lazy" />
+            }
+            <div style="min-width: 0; flex: 1;">
+                <h3 class="artist-name">@Artist.DisplayName</h3>
+                @if (Artist.PrimarySource is not null)
+                {
+                    <a class="artist-handle"
+                       href="@Artist.PrimarySource.ProfileUrl"
+                       target="_blank"
+                       rel="noopener noreferrer">
+                        via @@@Artist.PrimarySource.Handle
+                    </a>
+                }
+            </div>
+        </div>
+
+        @if (!string.IsNullOrWhiteSpace(Artist.BioSnippet))
+        {
+            <p class="artist-bio">@Artist.BioSnippet</p>
+        }
+
+        @if (Match.MatchReasons.Count > 0)
+        {
+            <div class="tag-row">
+                @foreach (var reason in Match.MatchReasons)
+                {
+                    <span class="reason-pill">@reason</span>
+                }
+            </div>
+        }
+
+        @if (DisplayTags.Count > 0)
+        {
+            <div class="tag-row">
+                @foreach (var tag in DisplayTags)
+                {
+                    <span class="tag-pill">@tag</span>
+                }
+            </div>
+        }
+
+        <div class="card-footer">
+            <a class="btn btn-primary cta-link"
+               href="@Artist.ArtistPageUrl"
+               target="_blank"
+               rel="noopener noreferrer">
+                Visit @PageTypeLabel ↗
+            </a>
+            <button type="button"
+                    class="btn btn-ghost"
+                    @onclick="() => OnInspect.InvokeAsync(Match)">
+                Preview
+            </button>
+        </div>
+    </div>
+</article>
+
+@code {
+    [Parameter, EditorRequired] public ArtistMatch Match { get; set; } = default!;
+    [Parameter] public EventCallback<ArtistMatch> OnInspect { get; set; }
+
+    private int _activeIndex;
+    private Artist Artist => Match.Artist;
+    private ArtworkPreview? CurrentPreview =>
+        Artist.Previews.Count > 0
+            ? Artist.Previews[Math.Clamp(_activeIndex, 0, Artist.Previews.Count - 1)]
+            : null;
+
+    private IReadOnlyList<string> DisplayTags =>
+        Artist.StyleTags.Concat(Artist.CategoryTags).Distinct().Take(4).ToList();
+
+    private string PageTypeLabel => Artist.ArtistPageType switch
+    {
+        ArtistPageType.VGen => "VGen",
+        ArtistPageType.Carrd => "Carrd",
+        ArtistPageType.Kofi => "Ko-fi",
+        ArtistPageType.Artistree => "Artistree",
+        ArtistPageType.Portfolio => "Portfolio",
+        ArtistPageType.Bluesky => "Bluesky",
+        _ => "Artist Page"
+    };
+}

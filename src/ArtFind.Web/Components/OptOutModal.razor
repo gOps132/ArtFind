@@ -1,0 +1,85 @@
+@if (IsOpen)
+{
+    <div class="modal-backdrop" @onclick="OnClose" role="dialog" aria-modal="true" aria-label="Artist opt-out">
+        <div class="modal-card" @onclick:stopPropagation="true">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h2 class="modal-title">Artist Opt-Out</h2>
+                <button type="button" class="btn btn-subtle" @onclick="OnClose" aria-label="Close modal">✕</button>
+            </div>
+
+            <p style="margin: 0; font-size: 0.88rem; color: var(--ink-secondary);">
+                ArtFind only links to public <strong>#commissionsopen</strong> artists and never re-hosts full-resolution artwork.
+                If you prefer not to be listed, you can opt out two ways:
+            </p>
+
+            <ul style="margin: 12px 0; padding-left: 18px; font-size: 0.84rem; color: var(--ink-secondary);">
+                <li>Add <code>#noartfind</code> to your Bluesky bio (automatically honored on every sync).</li>
+                <li>Or enter your Bluesky handle below to remove your listing immediately.</li>
+            </ul>
+
+            @if (_submitted)
+            {
+                <div style="padding: 12px 14px; border-radius: var(--radius-md); background: var(--surface-muted); font-size: 0.86rem;">
+                    <strong>Done.</strong> <code>@@@_handle.TrimStart('@')</code> has been added to the opt-out list and removed from results.
+                </div>
+                <div style="margin-top: 16px; display: flex; justify-content: flex-end;">
+                    <button type="button" class="btn btn-primary" @onclick="CloseAndReset">Close</button>
+                </div>
+            }
+            else
+            {
+                <label class="field-label" for="optout-handle">Bluesky handle</label>
+                <input id="optout-handle"
+                       class="brief-input"
+                       style="width: 100%;"
+                       placeholder="e.g. artist.bsky.social"
+                       @bind="_handle" />
+
+                <label class="field-label" for="optout-reason">Optional note</label>
+                <input id="optout-reason"
+                       class="brief-input"
+                       style="width: 100%;"
+                       placeholder="Optional reason"
+                       @bind="_reason" />
+
+                <div style="margin-top: 18px; display: flex; justify-content: flex-end; gap: 8px;">
+                    <button type="button" class="btn btn-ghost" @onclick="OnClose">Cancel</button>
+                    <button type="button"
+                            class="btn btn-primary"
+                            disabled="@(string.IsNullOrWhiteSpace(_handle) || _busy)"
+                            @onclick="SubmitAsync">
+                        @(_busy ? "Removing…" : "Remove My Listing")
+                    </button>
+                </div>
+            }
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public bool IsOpen { get; set; }
+    [Parameter] public EventCallback OnClose { get; set; }
+    [Parameter] public EventCallback<(string Handle, string? Reason)> OnSubmitted { get; set; }
+
+    private string _handle = string.Empty;
+    private string _reason = string.Empty;
+    private bool _busy;
+    private bool _submitted;
+
+    private async Task SubmitAsync()
+    {
+        if (string.IsNullOrWhiteSpace(_handle)) return;
+        _busy = true;
+        await OnSubmitted.InvokeAsync((_handle, _reason));
+        _busy = false;
+        _submitted = true;
+    }
+
+    private async Task CloseAndReset()
+    {
+        _handle = string.Empty;
+        _reason = string.Empty;
+        _submitted = false;
+        await OnClose.InvokeAsync();
+    }
+}
