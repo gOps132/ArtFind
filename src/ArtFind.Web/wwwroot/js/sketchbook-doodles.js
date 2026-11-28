@@ -466,21 +466,22 @@
     const y = window.scrollY || 0;
     const hasTagBrowser = Boolean(bar.querySelector(".tag-browser-wrap"));
 
-    let foldTags = 0;
     let foldHero = 0;
+    let foldTags = 0;
     if (hasTagBrowser) {
-      // Stage 1: Tag search folds first (0..80px), Stage 2: Hero folds second (80..170px)
-      foldTags = Math.min(1, Math.max(0, y / 80));
-      foldHero = Math.min(1, Math.max(0, (y - 80) / 90));
+      // Bottom-to-up fold: Hero (bottom) folds first (0..90px), Tag Search folds second (90..175px)
+      foldHero = Math.min(1, Math.max(0, y / 90));
+      foldTags = Math.min(1, Math.max(0, (y - 90) / 85));
     } else {
       foldHero = Math.min(1, Math.max(0, y / 110));
     }
 
-    bar.style.setProperty("--fold-tags", foldTags.toFixed(3));
     bar.style.setProperty("--fold-hero", foldHero.toFixed(3));
-    bar.style.setProperty("--fold", foldHero.toFixed(3));
+    bar.style.setProperty("--fold-tags", foldTags.toFixed(3));
+    bar.style.setProperty("--fold", (hasTagBrowser ? foldTags : foldHero).toFixed(3));
 
-    if (foldHero >= 0.96) {
+    const fullyFolded = hasTagBrowser ? foldTags >= 0.96 : foldHero >= 0.96;
+    if (fullyFolded) {
       bar.classList.add("is-compact");
     } else if (y < 16) {
       bar.classList.remove("is-compact");
