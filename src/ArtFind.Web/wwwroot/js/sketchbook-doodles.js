@@ -188,28 +188,47 @@
     return 24 + Math.random() * Math.max(120, vw - 48);
   }
 
-  function spawnDoodle(svg, x, y, isLive) {
+  function spawnDoodle(svg, x, y, isLive, isGiant = false) {
     const spec = DOODLES[Math.floor(Math.random() * DOODLES.length)]();
     const rot = (Math.random() * 54 - 27).toFixed(1);
-    const scale = (0.62 + Math.random() * 1.05).toFixed(2);
+    const scale = isGiant
+      ? (4.8 + Math.random() * 2.4).toFixed(2)
+      : (0.62 + Math.random() * 1.05).toFixed(2);
     const color = pickColor();
 
     const g = document.createElementNS(SVG_NS, "g");
+    const shiftDur = (480 + Math.random() * 260).toFixed(0);
+    const shiftDelay = (-Math.random() * 600).toFixed(0);
     g.setAttribute("transform", `translate(${x.toFixed(1)} ${y.toFixed(1)}) rotate(${rot}) scale(${scale})`);
-    g.setAttribute("class", isLive ? "doodle-group doodle-live" : "doodle-group");
+    g.setAttribute(
+      "class",
+      [
+        "doodle-group",
+        isLive ? "doodle-live" : "",
+        isGiant ? "doodle-giant" : ""
+      ].filter(Boolean).join(" ")
+    );
     g.style.color = color;
+
+    const inner = document.createElementNS(SVG_NS, "g");
+    inner.setAttribute("class", "doodle-shift");
+    inner.style.animationDuration = `${shiftDur}ms`;
+    inner.style.animationDelay = `${shiftDelay}ms`;
 
     for (const d of spec.paths) {
       const path = document.createElementNS(SVG_NS, "path");
       path.setAttribute("d", d);
       path.setAttribute("class", spec.dashed ? "doodle-stroke doodle-dashed" : "doodle-stroke");
-      path.style.strokeWidth = `${spec.strokeWidth.toFixed(1)}px`;
+      path.style.strokeWidth = isGiant
+        ? `${Math.max(1.4, spec.strokeWidth * 0.55).toFixed(1)}px`
+        : `${spec.strokeWidth.toFixed(1)}px`;
       if (isLive) {
         path.style.animationDuration = `${(700 + Math.random() * 600).toFixed(0)}ms`;
       }
-      g.appendChild(path);
+      inner.appendChild(path);
     }
 
+    g.appendChild(inner);
     svg.appendChild(g);
   }
 
@@ -221,7 +240,14 @@
     for (let i = 0; i < count; i++) {
       const x = pickX(vw, i + bandIndex);
       const y = yStart + Math.random() * (BAND_HEIGHT - 60);
-      spawnDoodle(svg, x, y, false);
+      spawnDoodle(svg, x, y, false, false);
+    }
+
+    // Occasionally spawn one oversized half-page doodle (every ~5 scroll bands)
+    if (bandIndex % 5 === 2) {
+      const gx = vw * (0.22 + Math.random() * 0.56);
+      const gy = yStart + BAND_HEIGHT * 0.5;
+      spawnDoodle(svg, gx, gy, false, true);
     }
   }
 
