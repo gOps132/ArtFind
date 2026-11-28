@@ -1,5 +1,10 @@
 <article class="artist-card">
-    <div class="card-media" @onclick="() => OnInspect.InvokeAsync(Match)" role="button" tabindex="0" aria-label="Preview @Artist.DisplayName artwork">
+    <div class="card-media"
+         @onclick="() => OnInspect.InvokeAsync(Match)"
+         @onkeydown="HandleMediaKeyDown"
+         role="button"
+         tabindex="0"
+         aria-label="Preview @Artist.DisplayName artwork">
         @if (CurrentPreview is not null)
         {
             <img src="@CurrentPreview.ThumbnailUrl"
@@ -16,7 +21,7 @@
 
             @if (Artist.PriceRange is not null)
             {
-                <span class="price-badge">@Artist.PriceRange.RawText</span>
+                <span class="price-badge mono">@Artist.PriceRange.RawText</span>
             }
         </div>
 
@@ -43,15 +48,15 @@
             {
                 <img class="avatar" src="@Artist.AvatarUrl" alt="" loading="lazy" />
             }
-            <div style="min-width: 0; flex: 1;">
+            <div class="artist-identity">
                 <h3 class="artist-name">@Artist.DisplayName</h3>
                 @if (Artist.PrimarySource is not null)
                 {
-                    <a class="artist-handle"
+                    <a class="artist-handle mono"
                        href="@Artist.PrimarySource.ProfileUrl"
                        target="_blank"
                        rel="noopener noreferrer">
-                        via @@@Artist.PrimarySource.Handle
+                        @@@Artist.PrimarySource.Handle
                     </a>
                 }
             </div>
@@ -62,19 +67,13 @@
             <p class="artist-bio">@Artist.BioSnippet</p>
         }
 
-        @if (Match.MatchReasons.Count > 0)
+        @if (Match.MatchReasons.Count > 0 || DisplayTags.Count > 0)
         {
             <div class="tag-row">
-                @foreach (var reason in Match.MatchReasons)
+                @foreach (var reason in Match.MatchReasons.Take(2))
                 {
                     <span class="reason-pill">@reason</span>
                 }
-            </div>
-        }
-
-        @if (DisplayTags.Count > 0)
-        {
-            <div class="tag-row">
                 @foreach (var tag in DisplayTags)
                 {
                     <span class="tag-pill">@tag</span>
@@ -87,12 +86,13 @@
                href="@Artist.ArtistPageUrl"
                target="_blank"
                rel="noopener noreferrer">
-                Visit @PageTypeLabel ↗
+                <span>Visit @PageTypeLabel</span>
+                <span aria-hidden="true">↗</span>
             </a>
             <button type="button"
                     class="btn btn-ghost"
                     @onclick="() => OnInspect.InvokeAsync(Match)">
-                Preview
+                Inspect
             </button>
         </div>
     </div>
@@ -110,7 +110,7 @@
             : null;
 
     private IReadOnlyList<string> DisplayTags =>
-        Artist.StyleTags.Concat(Artist.CategoryTags).Distinct().Take(4).ToList();
+        Artist.StyleTags.Concat(Artist.CategoryTags).Distinct().Take(3).ToList();
 
     private string PageTypeLabel => Artist.ArtistPageType switch
     {
@@ -122,4 +122,14 @@
         ArtistPageType.Bluesky => "Bluesky",
         _ => "Artist Page"
     };
+
+    private Task HandleMediaKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key is "Enter" or " ")
+        {
+            return OnInspect.InvokeAsync(Match);
+        }
+
+        return Task.CompletedTask;
+    }
 }

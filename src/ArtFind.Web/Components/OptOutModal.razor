@@ -1,49 +1,55 @@
 @if (IsOpen)
 {
-    <div class="modal-backdrop" @onclick="OnClose" role="dialog" aria-modal="true" aria-label="Artist opt-out">
-        <div class="modal-card" @onclick:stopPropagation="true">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
+    <div class="modal-backdrop @(_closing ? "is-closing" : "")"
+         @onclick="CloseAsync"
+         @onkeydown="HandleKeyDown"
+         tabindex="-1"
+         role="dialog"
+         aria-modal="true"
+         aria-label="Artist opt-out">
+        <div class="modal-card @(_closing ? "is-closing" : "")" @onclick:stopPropagation="true">
+            <div class="modal-header">
                 <h2 class="modal-title">Artist Opt-Out</h2>
-                <button type="button" class="btn btn-subtle" @onclick="OnClose" aria-label="Close modal">✕</button>
+                <button type="button" class="btn btn-subtle btn-icon" @onclick="CloseAsync" aria-label="Close modal">✕</button>
             </div>
 
-            <p style="margin: 0; font-size: 0.88rem; color: var(--ink-secondary);">
+            <p class="modal-copy">
                 ArtFind only links to public <strong>#commissionsopen</strong> artists and never re-hosts full-resolution artwork.
                 If you prefer not to be listed, you can opt out two ways:
             </p>
 
-            <ul style="margin: 12px 0; padding-left: 18px; font-size: 0.84rem; color: var(--ink-secondary);">
+            <ul class="modal-list">
                 <li>Add <code>#noartfind</code> to your Bluesky bio (automatically honored on every sync).</li>
                 <li>Or enter your Bluesky handle below to remove your listing immediately.</li>
             </ul>
 
             @if (_submitted)
             {
-                <div style="padding: 12px 14px; border-radius: var(--radius-md); background: var(--surface-muted); font-size: 0.86rem;">
+                <div class="modal-success">
                     <strong>Done.</strong> <code>@@@_handle.TrimStart('@')</code> has been added to the opt-out list and removed from results.
                 </div>
-                <div style="margin-top: 16px; display: flex; justify-content: flex-end;">
-                    <button type="button" class="btn btn-primary" @onclick="CloseAndReset">Close</button>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" @onclick="CloseAndResetAsync">Close</button>
                 </div>
             }
             else
             {
                 <label class="field-label" for="optout-handle">Bluesky handle</label>
                 <input id="optout-handle"
-                       class="brief-input"
-                       style="width: 100%;"
+                       class="brief-input brief-input-boxed"
+                       autocapitalize="none"
+                       autocorrect="off"
                        placeholder="e.g. artist.bsky.social"
                        @bind="_handle" />
 
                 <label class="field-label" for="optout-reason">Optional note</label>
                 <input id="optout-reason"
-                       class="brief-input"
-                       style="width: 100%;"
+                       class="brief-input brief-input-boxed"
                        placeholder="Optional reason"
                        @bind="_reason" />
 
-                <div style="margin-top: 18px; display: flex; justify-content: flex-end; gap: 8px;">
-                    <button type="button" class="btn btn-ghost" @onclick="OnClose">Cancel</button>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-ghost" @onclick="CloseAsync">Cancel</button>
                     <button type="button"
                             class="btn btn-primary"
                             disabled="@(string.IsNullOrWhiteSpace(_handle) || _busy)"
@@ -65,6 +71,15 @@
     private string _reason = string.Empty;
     private bool _busy;
     private bool _submitted;
+    private bool _closing;
+
+    protected override void OnParametersSet()
+    {
+        if (IsOpen)
+        {
+            _closing = false;
+        }
+    }
 
     private async Task SubmitAsync()
     {
@@ -75,11 +90,26 @@
         _submitted = true;
     }
 
-    private async Task CloseAndReset()
+    private async Task CloseAsync()
     {
+        if (_closing) return;
+        _closing = true;
+        StateHasChanged();
+        await Task.Delay(150);
+        _closing = false;
+        await OnClose.InvokeAsync();
+    }
+
+    private async Task CloseAndResetAsync()
+    {
+        await CloseAsync();
         _handle = string.Empty;
         _reason = string.Empty;
         _submitted = false;
-        await OnClose.InvokeAsync();
+    }
+
+    private Task HandleKeyDown(KeyboardEventArgs e)
+    {
+        return e.Key == "Escape" ? CloseAsync() : Task.CompletedTask;
     }
 }

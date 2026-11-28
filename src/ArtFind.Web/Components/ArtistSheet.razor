@@ -1,55 +1,82 @@
 @if (Match is not null)
 {
     var artist = Match.Artist;
-    <div class="backdrop" @onclick="OnClose" role="dialog" aria-modal="true" aria-label="@artist.DisplayName details">
-        <aside class="sheet" @onclick:stopPropagation="true">
-            <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 12px;">
+    var activePreview = artist.Previews.Count > 0
+        ? artist.Previews[Math.Clamp(_selectedPreviewIndex, 0, artist.Previews.Count - 1)]
+        : null;
+
+    <div class="backdrop @(_closing ? "is-closing" : "")"
+         @onclick="CloseAsync"
+         @onkeydown="HandleKeyDown"
+         tabindex="-1"
+         role="dialog"
+         aria-modal="true"
+         aria-label="@artist.DisplayName details">
+        <aside class="sheet @(_closing ? "is-closing" : "")" @onclick:stopPropagation="true">
+            <div class="sheet-top">
                 <div class="artist-header">
                     @if (!string.IsNullOrWhiteSpace(artist.AvatarUrl))
                     {
-                        <img class="avatar" style="width: 44px; height: 44px;" src="@artist.AvatarUrl" alt="" />
+                        <img class="avatar avatar-lg" src="@artist.AvatarUrl" alt="" />
                     }
-                    <div>
-                        <h2 style="margin: 0; font-size: 1.2rem; font-weight: 600;">@artist.DisplayName</h2>
+                    <div class="artist-identity">
+                        <h2 class="sheet-title">@artist.DisplayName</h2>
                         @if (artist.PrimarySource is not null)
                         {
-                            <a class="artist-handle" href="@artist.PrimarySource.ProfileUrl" target="_blank" rel="noopener noreferrer">
-                                @@@artist.PrimarySource.Handle on @artist.PrimarySource.Platform
+                            <a class="artist-handle mono" href="@artist.PrimarySource.ProfileUrl" target="_blank" rel="noopener noreferrer">
+                                @@@artist.PrimarySource.Handle · @artist.PrimarySource.Platform
                             </a>
                         }
                     </div>
                 </div>
-                <button type="button" class="btn btn-ghost" @onclick="OnClose" aria-label="Close preview">✕</button>
+                <button type="button" class="btn btn-ghost btn-icon" @onclick="CloseAsync" aria-label="Close preview">✕</button>
             </div>
 
-            <div style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center;">
+            <div class="sheet-meta">
                 <span class="status-pill">
-                    <span class="status-dot"></span>
+                    <span class="status-dot" aria-hidden="true"></span>
                     Commissions Open
                 </span>
                 @if (artist.PriceRange is not null)
                 {
-                    <span class="price-badge">@artist.PriceRange.RawText</span>
+                    <span class="price-badge mono">@artist.PriceRange.RawText</span>
                 }
-                <span class="tag-pill">Verified @artist.LastVerifiedAt.ToLocalTime().ToString("MMM d")</span>
+                <span class="tag-pill mono">Verified @artist.LastVerifiedAt.ToLocalTime().ToString("MMM d")</span>
             </div>
 
-            @if (artist.Previews.Count > 0)
+            @if (activePreview is not null)
             {
-                <div class="sheet-gallery">
-                    @foreach (var preview in artist.Previews)
-                    {
-                        <a href="@(preview.SourcePostUrl ?? artist.ArtistPageUrl)" target="_blank" rel="noopener noreferrer">
-                            <img src="@preview.ThumbnailUrl"
-                                 alt="@(string.IsNullOrWhiteSpace(preview.AltText) ? artist.DisplayName : preview.AltText)" />
-                        </a>
-                    }
-                </div>
+                <a class="sheet-stage"
+                   href="@(activePreview.SourcePostUrl ?? artist.ArtistPageUrl)"
+                   target="_blank"
+                   rel="noopener noreferrer"
+                   title="Open original artwork post">
+                    <img src="@activePreview.ThumbnailUrl"
+                         alt="@(string.IsNullOrWhiteSpace(activePreview.AltText) ? artist.DisplayName : activePreview.AltText)" />
+                </a>
+
+                @if (artist.Previews.Count > 1)
+                {
+                    <div class="sheet-thumbs" role="group" aria-label="Artwork samples">
+                        @for (var i = 0; i < artist.Previews.Count; i++)
+                        {
+                            var idx = i;
+                            var preview = artist.Previews[idx];
+                            <button type="button"
+                                    class="sheet-thumb @(idx == _selectedPreviewIndex ? "active" : "")"
+                                    @onclick="() => _selectedPreviewIndex = idx"
+                                    aria-label="View sample @(idx + 1)">
+                                <img src="@preview.ThumbnailUrl"
+                                     alt="@(string.IsNullOrWhiteSpace(preview.AltText) ? $"{artist.DisplayName} sample {idx + 1}" : preview.AltText)" />
+                            </button>
+                        }
+                    </div>
+                }
             }
 
             @if (!string.IsNullOrWhiteSpace(artist.BioSnippet))
             {
-                <p style="margin: 0; font-size: 0.92rem; color: var(--ink-secondary); white-space: pre-line;">@artist.BioSnippet</p>
+                <p class="sheet-bio">@artist.BioSnippet</p>
             }
 
             @if (artist.StyleTags.Count > 0 || artist.CategoryTags.Count > 0)
@@ -62,13 +89,13 @@
                 </div>
             }
 
-            <div style="margin-top: auto; padding-top: 16px; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 10px;">
-                <a class="btn btn-accent"
-                   style="padding: 12px 18px;"
+            <div class="sheet-actions">
+                <a class="btn btn-accent btn-lg"
                    href="@artist.ArtistPageUrl"
                    target="_blank"
                    rel="noopener noreferrer">
-                    Open Artist Page (@artist.ArtistPageType) ↗
+                    <span>Open Artist Page (@artist.ArtistPageType)</span>
+                    <span aria-hidden="true">↗</span>
                 </a>
 
                 @if (artist.PrimarySource is not null)
@@ -77,7 +104,8 @@
                        href="@(artist.PrimarySource.SourcePostUrl ?? artist.PrimarySource.ProfileUrl)"
                        target="_blank"
                        rel="noopener noreferrer">
-                        View Original Post on Bluesky ↗
+                        <span>View Original Post on Bluesky</span>
+                        <span aria-hidden="true">↗</span>
                     </a>
                 }
             </div>
@@ -88,4 +116,34 @@
 @code {
     [Parameter] public ArtistMatch? Match { get; set; }
     [Parameter] public EventCallback OnClose { get; set; }
+
+    private int _selectedPreviewIndex;
+    private string? _lastArtistId;
+    private bool _closing;
+
+    protected override void OnParametersSet()
+    {
+        var currentId = Match?.Artist.Id;
+        if (currentId != _lastArtistId)
+        {
+            _lastArtistId = currentId;
+            _selectedPreviewIndex = 0;
+            _closing = false;
+        }
+    }
+
+    private async Task CloseAsync()
+    {
+        if (_closing) return;
+        _closing = true;
+        StateHasChanged();
+        await Task.Delay(210);
+        _closing = false;
+        await OnClose.InvokeAsync();
+    }
+
+    private Task HandleKeyDown(KeyboardEventArgs e)
+    {
+        return e.Key == "Escape" ? CloseAsync() : Task.CompletedTask;
+    }
 }
