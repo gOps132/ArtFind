@@ -67,14 +67,19 @@
             <option value="250">≤ $250</option>
         </select>
 
-        <select class="filter-select" @bind="_selectedPageType" aria-label="Filter by Artist Page platform">
+        <select class="filter-select" @bind="_selectedPlatform" aria-label="Filter by platform">
             <option value="">Platform</option>
-            <option value="VGen">VGen</option>
-            <option value="Carrd">Carrd</option>
-            <option value="Kofi">Ko-fi</option>
-            <option value="Artistree">Artistree</option>
-            <option value="Portfolio">Portfolio</option>
-            <option value="Bluesky">Bluesky</option>
+            <optgroup label="Source platforms">
+                <option value="source:bluesky">Bluesky</option>
+                <option value="source:mastodon">Mastodon</option>
+            </optgroup>
+            <optgroup label="Artist Pages">
+                <option value="VGen">VGen</option>
+                <option value="Carrd">Carrd</option>
+                <option value="Kofi">Ko-fi</option>
+                <option value="Artistree">Artistree</option>
+                <option value="Portfolio">Portfolio</option>
+            </optgroup>
         </select>
 
         <label class="nsfw-toggle">
@@ -247,7 +252,7 @@
     private string _query = string.Empty;
     private string _selectedCategory = string.Empty;
     private string _maxBudgetValue = string.Empty;
-    private string _selectedPageType = string.Empty;
+    private string _selectedPlatform = string.Empty;
     private bool _includeNsfw;
     private readonly HashSet<string> _selectedStyles = new(StringComparer.OrdinalIgnoreCase);
 
@@ -325,7 +330,7 @@
         _selectedStyles.Count > 0 ||
         !string.IsNullOrWhiteSpace(_selectedCategory) ||
         !string.IsNullOrWhiteSpace(_maxBudgetValue) ||
-        !string.IsNullOrWhiteSpace(_selectedPageType) ||
+        !string.IsNullOrWhiteSpace(_selectedPlatform) ||
         _includeNsfw;
 
     private IReadOnlyList<ArtistMatch> Matches
@@ -340,12 +345,21 @@
                 StyleTags = _selectedStyles.ToList(),
                 CategoryTags = string.IsNullOrWhiteSpace(_selectedCategory) ? [] : [_selectedCategory],
                 MaxBudgetUsd = int.TryParse(_maxBudgetValue, out var budget) ? budget : null,
-                PreferredPageType = Enum.TryParse<ArtistPageType>(_selectedPageType, out var pt) ? pt : null,
+                PreferredPageType = Enum.TryParse<ArtistPageType>(_selectedPlatform, out var pt) ? pt : null,
                 IncludeNsfw = _includeNsfw,
                 OpenOnly = true
             };
 
-            return Matcher.Match(_snapshot.Artists, brief);
+            const string sourcePrefix = "source:";
+            var artists = _snapshot.Artists.AsEnumerable();
+            if (_selectedPlatform.StartsWith(sourcePrefix, StringComparison.Ordinal))
+            {
+                var platform = _selectedPlatform[sourcePrefix.Length..];
+                artists = artists.Where(a => a.SourceProfiles.Any(s =>
+                    string.Equals(s.Platform, platform, StringComparison.OrdinalIgnoreCase)));
+            }
+
+            return Matcher.Match(artists, brief);
         }
     }
 
@@ -360,7 +374,7 @@
         _query = string.Empty;
         _selectedCategory = string.Empty;
         _maxBudgetValue = string.Empty;
-        _selectedPageType = string.Empty;
+        _selectedPlatform = string.Empty;
         _includeNsfw = false;
         _selectedStyles.Clear();
     }
