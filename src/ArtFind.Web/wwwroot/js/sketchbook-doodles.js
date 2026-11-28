@@ -258,15 +258,60 @@
   let generatedBands = 0;
   let liveCount = 0;
   let rafPending = false;
+  // Spatial record of placed points { x, y, r } for blue-noise / Poisson-like spacing
+  const placedPoints = [];
+  const placedGiants = [];
 
   function pickX(vw, index) {
     if (vw > 1120 && index % 4 !== 3) {
       const marginWidth = Math.max(70, (vw - 1240) / 2 + 65);
       return index % 2 === 0
-        ? 22 + Math.random() * marginWidth
-        : vw - 22 - Math.random() * marginWidth;
+        ? 28 + Math.random() * marginWidth
+        : vw - 28 - Math.random() * marginWidth;
     }
-    return 24 + Math.random() * Math.max(120, vw - 48);
+    return 32 + Math.random() * Math.max(120, vw - 64);
+  }
+
+  function nearestDistSq(x, y, points) {
+    let minSq = Infinity;
+    // Only check points within a vertical window for speed
+    for (let i = points.length - 1; i >= 0; i--) {
+      const p = points[i];
+      const dy = y - p.y;
+      if (Math.abs(dy) > 420) continue;
+      const dx = x - p.x;
+      const dSq = dx * dx + dy * dy;
+      if (dSq < minSq) minSq = dSq;
+    }
+    return minSq;
+  }
+
+  // Mitchell's Best-Candidate sampling: organic Voronoi-like blue-noise distribution
+  // that prevents clumping while keeping natural variation in spacing.
+  function pickBlueNoisePoint(vw, yMin, yMax, minDist, indexSeed, candidates = 14) {
+    let bestX = pickX(vw, indexSeed);
+    let bestY = yMin + Math.random() * (yMax - yMin);
+    let bestScore = -1;
+    const minDistSq = minDist * minDist;
+
+    for (let c = 0; c < candidates; c++) {
+      const cx = pickX(vw, indexSeed + c);
+      const cy = yMin + Math.random() * (yMax - yMin);
+      const dSq = nearestDistSq(cx, cy, placedPoints);
+
+      // Accept immediately if comfortably spaced, with slight jitter so spacing stays organic
+      if (dSq >= minDistSq * (0.9 + Math.random() * 0.4)) {
+        return { x: cx, y: cy };
+      }
+
+      if (dSq > bestScore) {
+        bestScore = dSq;
+        bestX = cx;
+        bestY = cy;
+      }
+    }
+
+    return { x: bestX, y: bestY };
   }
 
   function spawnDoodle(svg, x, y, isLive, isGiant = false) {
@@ -342,12 +387,15 @@
 
   function appendBand(svg, bandIndex) {
     const vw = document.documentElement.clientWidth || window.innerWidth || 1200;
-    const count = vw < 640 ? 5 : 8;
-    const yStart = bandIndex * BAND_HEIGHT + 36;
+    const count = vw < 640 ? 4 : 7;
+    const yMin = bandIndex * BAND_HEIGHT + 34;
+    const yMax = yMin + BAND_HEIGHT - 56;
+    const minDist = vw < 640 ? 92 : 108;
 
     for (let i = 0; i < count; i++) {
-      const x = pickX(vw, i + bandIndex);
-      const y = yStart + Math.random() * (BAND_HEIGHT - 60);
+      const { x, y } = pickBlueNoisePoint(vw, yMin, yMax, minDist, i + bandIndex);
+      placedPoints.push({ x, y });
+
       const roll = Math.random();
       if (roll < 0.16) {
         spawnStickerOrStamp(svg, x, y, true);
@@ -361,8 +409,12 @@
     // Occasionally spawn one oversized half-page doodle (every ~5 scroll bands)
     if (bandIndex % 5 === 2) {
       const gx = vw * (0.22 + Math.random() * 0.56);
-      const gy = yStart + BAND_HEIGHT * 0.5;
-      spawnDoodle(svg, gx, gy, false, true);
+      const gy = yMin + BAND_HEIGHT * 0.45;
+      const giantTooClose = placedGiants.some((p) => Math.hypot(gx - p.x, gy - p.y) < 360);
+      if (!giantTooClose) {
+        placedGiants.push({ x: gx, y: gy });
+        spawnDoodle(svg, gx, gy, false, true);
+      }
     }
   }
 
@@ -393,8 +445,10 @@
     const scrollY = window.scrollY || 0;
     const maxH = parseFloat(svg.style.height || String(vh));
 
-    const x = pickX(vw, liveCount);
-    const y = Math.min(maxH - 40, scrollY + 70 + Math.random() * Math.max(180, vh - 120));
+    const yMin = scrollY + 70;
+    const yMax = Math.min(maxH - 40, scrollY + Math.max(250, vh - 60));
+    const { x, y } = pickBlueNoisePoint(vw, yMin, Math.max(yMin + 40, yMax), 96, liveCount, 10);
+    placedPoints.push({ x, y });
 
     spawnDoodle(svg, x, y, true);
     liveCount++;
