@@ -162,6 +162,87 @@
     })
   ];
 
+  // Cute die-cut stickers (vector SVG with cream die-cut outline)
+  const STICKERS = [
+    // 1. Cat paw sticker
+    () => `
+      <g class="sticker-diecut">
+        <ellipse cx="0" cy="8" rx="13" ry="10" fill="oklch(0.76 0.14 15)" stroke="oklch(0.2 0.018 55)" stroke-width="2" />
+        <circle cx="-12" cy="-6" r="4.5" fill="oklch(0.76 0.14 15)" stroke="oklch(0.2 0.018 55)" stroke-width="2" />
+        <circle cx="-4" cy="-12" r="4.5" fill="oklch(0.76 0.14 15)" stroke="oklch(0.2 0.018 55)" stroke-width="2" />
+        <circle cx="5" cy="-12" r="4.5" fill="oklch(0.76 0.14 15)" stroke="oklch(0.2 0.018 55)" stroke-width="2" />
+        <circle cx="12" cy="-5" r="4.5" fill="oklch(0.76 0.14 15)" stroke="oklch(0.2 0.018 55)" stroke-width="2" />
+      </g>`,
+    // 2. Sunflower star sticker
+    () => `
+      <g class="sticker-diecut">
+        <path d="M 0 -22 L 6 -7 L 22 -6 L 9 4 L 14 20 L 0 11 L -14 20 L -9 4 L -22 -6 L -6 -7 Z"
+              fill="oklch(0.86 0.16 90)" stroke="oklch(0.2 0.018 55)" stroke-width="2.2" stroke-linejoin="round" />
+        <circle cx="-4" cy="-2" r="1.6" fill="oklch(0.2 0.018 55)" />
+        <circle cx="4" cy="-2" r="1.6" fill="oklch(0.2 0.018 55)" />
+        <path d="M -3 3 Q 0 6 3 3" fill="none" stroke="oklch(0.2 0.018 55)" stroke-width="1.6" stroke-linecap="round" />
+      </g>`,
+    // 3. Cute bear face sticker
+    () => `
+      <g class="sticker-diecut">
+        <circle cx="-13" cy="-12" r="6" fill="oklch(0.78 0.08 65)" stroke="oklch(0.2 0.018 55)" stroke-width="2" />
+        <circle cx="13" cy="-12" r="6" fill="oklch(0.78 0.08 65)" stroke="oklch(0.2 0.018 55)" stroke-width="2" />
+        <ellipse cx="0" cy="2" rx="17" ry="15" fill="oklch(0.82 0.07 65)" stroke="oklch(0.2 0.018 55)" stroke-width="2" />
+        <ellipse cx="0" cy="5" rx="6" ry="4.5" fill="oklch(0.95 0.02 85)" />
+        <circle cx="-6" cy="-1" r="1.8" fill="oklch(0.2 0.018 55)" />
+        <circle cx="6" cy="-1" r="1.8" fill="oklch(0.2 0.018 55)" />
+        <circle cx="0" cy="4" r="2" fill="oklch(0.2 0.018 55)" />
+      </g>`,
+    // 4. Paint tube sticker
+    () => `
+      <g class="sticker-diecut">
+        <rect x="-9" y="-14" width="18" height="26" rx="3" fill="oklch(0.62 0.16 255)" stroke="oklch(0.2 0.018 55)" stroke-width="2" />
+        <rect x="-5" y="12" width="10" height="6" rx="1" fill="oklch(0.92 0.02 85)" stroke="oklch(0.2 0.018 55)" stroke-width="1.8" />
+        <rect x="-11" y="-18" width="22" height="5" rx="1" fill="oklch(0.86 0.16 90)" stroke="oklch(0.2 0.018 55)" stroke-width="1.8" />
+        <line x1="-5" y1="-2" x2="5" y2="-2" stroke="oklch(0.98 0.01 85)" stroke-width="2.5" stroke-linecap="round" />
+      </g>`,
+    // 5. Washi tape strip
+    () => `
+      <g opacity="0.72">
+        <path d="M -32 -9 L 30 -10 L 28 10 L -34 9 Z" fill="oklch(0.75 0.12 162 / 0.65)" stroke="oklch(0.2 0.018 55 / 0.35)" stroke-width="1.2" />
+        <circle cx="-18" cy="0" r="2.2" fill="oklch(0.98 0.01 85 / 0.8)" />
+        <circle cx="-4" cy="-2" r="2.2" fill="oklch(0.98 0.01 85 / 0.8)" />
+        <circle cx="10" cy="2" r="2.2" fill="oklch(0.98 0.01 85 / 0.8)" />
+        <circle cx="22" cy="-1" r="2.2" fill="oklch(0.98 0.01 85 / 0.8)" />
+      </g>`
+  ];
+
+  // Cute ink stamps
+  const STAMPS = [
+    () => ({
+      color: "oklch(0.55 0.18 28 / 0.45)",
+      svg: `
+        <rect x="-44" y="-14" width="88" height="28" rx="4" fill="none" stroke="currentColor" stroke-width="2.2" stroke-dasharray="5 2" />
+        <text x="0" y="4" text-anchor="middle" class="stamp-text">HAND-DRAWN</text>`
+    }),
+    () => ({
+      color: "oklch(0.49 0.17 258 / 0.45)",
+      svg: `
+        <circle cx="0" cy="0" r="26" fill="none" stroke="currentColor" stroke-width="2" />
+        <circle cx="0" cy="0" r="21" fill="none" stroke="currentColor" stroke-width="1.2" stroke-dasharray="3 3" />
+        <text x="0" y="-2" text-anchor="middle" class="stamp-text-sm">OPEN</text>
+        <text x="0" y="9" text-anchor="middle" class="stamp-text-sm">ARTIST ★</text>`
+    }),
+    () => ({
+      color: "oklch(0.48 0.14 162 / 0.48)",
+      svg: `
+        <rect x="-38" y="-13" width="76" height="26" rx="3" fill="none" stroke="currentColor" stroke-width="2.2" />
+        <text x="0" y="4" text-anchor="middle" class="stamp-text">SKETCH ✓</text>`
+    }),
+    () => ({
+      color: "oklch(0.22 0.02 55 / 0.4)",
+      svg: `
+        <path d="M -38 -10 Q -26 -16 -14 -10 T 10 -10 T 34 -10" fill="none" stroke="currentColor" stroke-width="1.6" />
+        <path d="M -38 0 Q -26 -6 -14 0 T 10 0 T 34 0" fill="none" stroke="currentColor" stroke-width="1.6" />
+        <path d="M -38 10 Q -26 4 -14 10 T 10 10 T 34 10" fill="none" stroke="currentColor" stroke-width="1.6" />`
+    })
+  ];
+
   function createLayer() {
     let svg = document.getElementById("sketchbook-doodles");
     if (svg) return svg;
@@ -232,6 +313,33 @@
     svg.appendChild(g);
   }
 
+  function spawnStickerOrStamp(svg, x, y, isSticker) {
+    const rot = (Math.random() * 44 - 22).toFixed(1);
+    const scale = (0.75 + Math.random() * 0.55).toFixed(2);
+    const g = document.createElementNS(SVG_NS, "g");
+    const shiftDur = (520 + Math.random() * 240).toFixed(0);
+    const shiftDelay = (-Math.random() * 600).toFixed(0);
+
+    g.setAttribute("transform", `translate(${x.toFixed(1)} ${y.toFixed(1)}) rotate(${rot}) scale(${scale})`);
+    g.setAttribute("class", isSticker ? "doodle-group doodle-sticker" : "doodle-group doodle-stamp");
+
+    const inner = document.createElementNS(SVG_NS, "g");
+    inner.setAttribute("class", "doodle-shift");
+    inner.style.animationDuration = `${shiftDur}ms`;
+    inner.style.animationDelay = `${shiftDelay}ms`;
+
+    if (isSticker) {
+      inner.innerHTML = STICKERS[Math.floor(Math.random() * STICKERS.length)]();
+    } else {
+      const stamp = STAMPS[Math.floor(Math.random() * STAMPS.length)]();
+      g.style.color = stamp.color;
+      inner.innerHTML = stamp.svg;
+    }
+
+    g.appendChild(inner);
+    svg.appendChild(g);
+  }
+
   function appendBand(svg, bandIndex) {
     const vw = document.documentElement.clientWidth || window.innerWidth || 1200;
     const count = vw < 640 ? 5 : 8;
@@ -240,7 +348,14 @@
     for (let i = 0; i < count; i++) {
       const x = pickX(vw, i + bandIndex);
       const y = yStart + Math.random() * (BAND_HEIGHT - 60);
-      spawnDoodle(svg, x, y, false, false);
+      const roll = Math.random();
+      if (roll < 0.16) {
+        spawnStickerOrStamp(svg, x, y, true);
+      } else if (roll < 0.28) {
+        spawnStickerOrStamp(svg, x, y, false);
+      } else {
+        spawnDoodle(svg, x, y, false, false);
+      }
     }
 
     // Occasionally spawn one oversized half-page doodle (every ~5 scroll bands)
