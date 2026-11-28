@@ -931,25 +931,41 @@
           const localT = (elapsedMs - step.startMs) / (step.endMs - step.startMs);
           if (footer) footer.classList.add("is-ripping");
           if (sheet) {
-            // Phase 1 (0..0.44): jagged tear progresses left-to-right; Phase 2 (0.44..1): 3D peel & drop
-            const tearPct = Math.min(1, localT / 0.44) * 100;
-            const peelT = Math.max(0, (localT - 0.32) / 0.68);
-            const peelEase = peelT * peelT;
+            // Phase 1 (0..0.46): curved-out tear sweeps left-to-right; Phase 2 (0.46..1): curved 3D peel
+            const tearFrac = Math.min(1, localT / 0.46);
+            const peelT = Math.max(0, (localT - 0.30) / 0.70);
+            const peelEase = easeInOutCubic(peelT);
 
-            const tx = peelEase * 52;
-            const ty = localT * 18 + peelEase * 230;
-            const rotZ = -localT * 4 - peelEase * 13;
-            const rotX = -peelEase * 22;
-            const rotY = peelEase * 12;
+            if (tearFrac < 0.995) {
+              const pts = [];
+              const steps = 16;
+              for (let k = 0; k <= steps; k++) {
+                const u = k / steps;
+                const xPct = (u * 100).toFixed(1);
+                const tornProgress = Math.max(0, Math.min(1, (tearFrac * 1.15 - u) / 0.25));
+                const arc = Math.sin(u * Math.PI) * 18 * tornProgress;
+                const tooth = ((k % 2 === 0 ? 1.8 : -1.4) + Math.sin(k * 2.7) * 1.2) * tornProgress;
+                const yPct = Math.max(0, Math.min(35, arc + tooth + (1 - u) * 10 * tornProgress));
+                pts.push(`${xPct}% ${yPct.toFixed(1)}%`);
+              }
+              pts.push("100% 100%", "0% 100%");
+              sheet.style.clipPath = `polygon(${pts.join(", ")})`;
+            } else {
+              sheet.style.clipPath =
+                "polygon(0% 8%, 12% 13%, 25% 17%, 38% 19%, 50% 20%, 62% 19%, 75% 16%, 88% 11%, 100% 4%, 100% 100%, 0% 100%)";
+            }
+
+            const tx = peelEase * 68;
+            const ty = localT * 22 + peelEase * 235;
+            const rotZ = -localT * 5 - peelEase * 16;
+            const rotX = -peelEase * 30;
+            const rotY = peelEase * 18;
+            const skewX = -peelEase * 7;
             const sc = 1 - peelEase * 0.08;
 
-            sheet.style.clipPath =
-              tearPct < 99.5
-                ? `polygon(0% 10%, ${tearPct.toFixed(1)}% 0%, ${(tearPct * 0.6 + 40).toFixed(1)}% 3%, 100% 0%, 100% 100%, 0% 100%)`
-                : "";
-            sheet.style.transform = `perspective(1200px) translate3d(${tx.toFixed(1)}px, ${ty.toFixed(1)}px, 0) rotateX(${rotX.toFixed(2)}deg) rotateY(${rotY.toFixed(2)}deg) rotateZ(${rotZ.toFixed(2)}deg) scale(${sc.toFixed(3)})`;
-            sheet.style.filter = `drop-shadow(0 ${(10 + peelEase * 18).toFixed(1)}px ${(14 + peelEase * 14).toFixed(1)}px rgba(38, 30, 22, ${(0.22 + peelEase * 0.16).toFixed(2)}))`;
-            sheet.style.opacity = Math.max(0, 1 - Math.max(0, (localT - 0.45) / 0.55)).toFixed(2);
+            sheet.style.transform = `perspective(1000px) translate3d(${tx.toFixed(1)}px, ${ty.toFixed(1)}px, 0) rotateX(${rotX.toFixed(2)}deg) rotateY(${rotY.toFixed(2)}deg) rotateZ(${rotZ.toFixed(2)}deg) skewX(${skewX.toFixed(2)}deg) scale(${sc.toFixed(3)})`;
+            sheet.style.filter = `drop-shadow(0 ${(12 + peelEase * 20).toFixed(1)}px ${(16 + peelEase * 16).toFixed(1)}px rgba(38, 30, 22, ${(0.24 + peelEase * 0.18).toFixed(2)}))`;
+            sheet.style.opacity = Math.max(0, 1 - Math.max(0, (localT - 0.48) / 0.52)).toFixed(2);
           }
         }
       }
