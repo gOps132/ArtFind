@@ -506,7 +506,12 @@
   let footerAnimRaf = null;
   let footerAnimStart = 0;
   let footerAtBottom = false;
-  const FOOTER_DRAW_DURATION_MS = 2800;
+  let footerTimeline = null;
+  let lastScenarioKey = null;
+
+  const E_GLYPH_PATH = "M 31.582031 115.429688 Q 43.613281 115.429688 67.812500 104.492188 Q 69.316406 104.492188 70.273438 105.517578 Q 71.230469 106.542969 71.230469 107.910156 Q 65.761719 117.207031 50.312500 122.402344 Q 34.863281 127.597656 21.464844 124.179688 Q 6.289062 120.214844 3.007812 107.089844 Q 2.734375 104.492188 2.734375 100.117188 Q 2.734375 95.742188 4.990234 88.564453 Q 7.246094 81.386719 12.714844 74.960938 Q 18.183594 68.535156 25.566406 64.843750 Q 32.949219 61.152344 41.289062 61.152344 Q 49.218750 61.152344 59.062500 66.621094 Q 63.710938 69.218750 66.445312 72.500000 Q 69.179688 75.781250 69.179688 79.199219 Q 69.179688 80.156250 69.042969 81.113281 Q 68.769531 89.453125 60.976562 91.640625 Q 57.558594 92.597656 53.046875 92.597656 L 33.359375 91.777344 Q 23.515625 91.777344 18.320312 96.015625 Q 15.312500 98.339844 14.082031 102.988281 Q 17.500000 115.429688 31.582031 115.429688 Z M 28.300781 73.730469 Q 18.867188 78.105469 18.867188 82.890625 Q 29.804688 83.847656 35.273438 83.847656 Q 50.449219 83.847656 55.781250 81.250000 Q 59.062500 79.882812 59.062500 77.832031 Q 59.062500 75.371094 55.986328 73.183594 Q 52.910156 70.996094 49.628906 70.039062 Q 46.347656 69.082031 44.160156 69.082031 Q 41.972656 69.082031 37.050781 70.517578 Q 32.128906 71.953125 28.300781 73.730469 Z";
+  const STAR_PATH = "M 492 18 L 496 29 L 507 30 L 498 37 L 501 48 L 492 41 L 483 48 L 486 37 L 477 30 L 488 29 Z";
+  const SWOOSH_PATH = "M 10 138 Q 160 128 310 137 T 482 132";
 
   function easeInOutSine(t) {
     return 0.5 - 0.5 * Math.cos(Math.PI * t);
@@ -516,107 +521,241 @@
     return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
   }
 
+  function createStrokeItem(path, dx = 0) {
+    const len = path.getTotalLength();
+    path.style.strokeDasharray = `${len}`;
+    path.style.strokeDashoffset = `${len.toFixed(2)}`;
+    const p0 = path.getPointAtLength(0);
+    const p1 = path.getPointAtLength(len);
+    return {
+      path,
+      len,
+      dx,
+      startPt: { x: p0.x + dx, y: p0.y },
+      endPt: { x: p1.x + dx, y: p1.y }
+    };
+  }
+
+  function appendExtraPath(group, d, dx = 0) {
+    const p = document.createElementNS(SVG_NS, "path");
+    p.setAttribute("class", "write-stroke");
+    p.setAttribute("d", d);
+    if (dx !== 0) p.setAttribute("transform", `translate(${dx} 0)`);
+    group.appendChild(p);
+    return createStrokeItem(p, dx);
+  }
+
   function initFooterWriting() {
     const svg = document.querySelector(".footer-write-svg");
     if (!svg) return null;
 
     if (!footerStrokeCache || !footerStrokeCache.svg.isConnected) {
-      const paths = Array.from(svg.querySelectorAll(".write-stroke"));
+      const mainPaths = Array.from(svg.querySelectorAll(".footer-write-paths .write-stroke"));
+      const typoGroup = svg.querySelector(".footer-typo-paths");
+      const flourishGroup = svg.querySelector(".footer-flourish-paths");
       const nib = svg.querySelector(".footer-pen-nib");
-      if (paths.length === 0 || !nib) return null;
+      const eraser = svg.querySelector(".footer-eraser");
+      if (mainPaths.length < 7 || !typoGroup || !flourishGroup || !nib || !eraser) return null;
 
-      const items = paths.map((p) => {
-        const len = p.getTotalLength();
-        p.style.strokeDasharray = `${len}`;
-        return {
-          path: p,
-          len,
-          startPt: p.getPointAtLength(0),
-          endPt: p.getPointAtLength(len),
-          start: 0,
-          end: 1
-        };
-      });
-
-      const gapWeight = 36;
-      const totalWeight =
-        items.reduce((s, it) => s + it.len, 0) + Math.max(0, items.length - 1) * gapWeight;
-
-      const moves = [];
-      let cursor = 0;
-      for (let i = 0; i < items.length; i++) {
-        const it = items[i];
-        it.start = cursor / totalWeight;
-        cursor += it.len;
-        it.end = cursor / totalWeight;
-
-        if (i < items.length - 1) {
-          const moveStart = cursor / totalWeight;
-          cursor += gapWeight;
-          const moveEnd = cursor / totalWeight;
-          moves.push({
-            from: it.endPt,
-            to: items[i + 1].startPt,
-            start: moveStart,
-            end: moveEnd
-          });
-        }
-      }
-
-      footerStrokeCache = { svg, items, moves, nib };
+      const mainItems = mainPaths.map((p) => createStrokeItem(p, 0));
+      footerStrokeCache = { svg, mainItems, typoGroup, flourishGroup, nib, eraser };
     }
 
     return footerStrokeCache;
   }
 
-  function renderFooterWriting(progress) {
-    const cache = initFooterWriting();
-    if (!cache) return;
+  function resetFooterPaths(cache) {
+    for (const it of cache.mainItems) {
+      it.path.style.strokeDashoffset = `${it.len.toFixed(2)}`;
+      it.path.style.opacity = "1";
+    }
+    cache.typoGroup.replaceChildren();
+    cache.flourishGroup.replaceChildren();
+    cache.nib.style.opacity = "1";
+    cache.eraser.style.opacity = "0";
+    const start = cache.mainItems[0].startPt;
+    cache.nib.setAttribute("transform", `translate(${(start.x - 12).toFixed(1)} ${(start.y - 52).toFixed(1)})`);
+  }
 
-    const { items, moves, nib } = cache;
-    const t = Math.min(1, Math.max(0, progress));
-    let tipPoint = t >= 1 ? items[items.length - 1].endPt : items[0].startPt;
+  function buildFooterScenario(cache) {
+    resetFooterPaths(cache);
+    const [A, r, t, F, i, n, d] = cache.mainItems;
 
-    for (const it of items) {
-      if (t <= it.start) {
-        it.path.style.strokeDashoffset = `${it.len.toFixed(2)}`;
-      } else if (t >= it.end) {
-        it.path.style.strokeDashoffset = "0";
-      } else {
-        const localT = (t - it.start) / (it.end - it.start);
-        const easedLocal = easeInOutCubic(localT);
-        const drawn = easedLocal * it.len;
-        it.path.style.strokeDashoffset = `${(it.len - drawn).toFixed(2)}`;
-        tipPoint = it.path.getPointAtLength(drawn);
+    const scenarios = ["artFnd", "artFined", "atrFind", "flourish"];
+    const pool = scenarios.filter((k) => k !== lastScenarioKey);
+    const key = pool[Math.floor(Math.random() * pool.length)];
+    lastScenarioKey = key;
+
+    const steps = [];
+    let cursor = 0;
+    let lastPt = A.startPt;
+
+    function pushMove(toPt) {
+      const dist = Math.hypot(toPt.x - lastPt.x, toPt.y - lastPt.y);
+      if (dist < 2) return;
+      const dur = 75;
+      steps.push({ kind: "move", from: lastPt, to: toPt, startMs: cursor, endMs: cursor + dur });
+      cursor += dur;
+      lastPt = toPt;
+    }
+
+    function pushDraw(item, speed = 1) {
+      pushMove(item.startPt);
+      const dur = Math.max(150, Math.round(item.len * 1.1 * speed));
+      steps.push({ kind: "draw", item, startMs: cursor, endMs: cursor + dur });
+      cursor += dur;
+      lastPt = item.endPt;
+    }
+
+    function pushPause(ms) {
+      steps.push({ kind: "pause", at: lastPt, startMs: cursor, endMs: cursor + ms });
+      cursor += ms;
+    }
+
+    function pushErase(targets, ms) {
+      const reversed = [...targets].reverse();
+      steps.push({ kind: "erase", targets: reversed, startMs: cursor, endMs: cursor + ms });
+      cursor += ms;
+      lastPt = targets[0].startPt;
+    }
+
+    if (key === "artFnd") {
+      // Misspells "ArtFnd" -> pauses -> erases "nd" -> writes "ind"
+      const nTypo = appendExtraPath(cache.typoGroup, n.path.getAttribute("d"), -21.1914);
+      const dTypo = appendExtraPath(cache.typoGroup, d.path.getAttribute("d"), -21.1914);
+      [A, r, t, F, nTypo, dTypo].forEach((it) => pushDraw(it));
+      pushPause(380);
+      pushErase([nTypo, dTypo], 700);
+      [i, n, d].forEach((it) => pushDraw(it, 0.92));
+    } else if (key === "artFined") {
+      // Misspells "ArtFined" -> pauses -> erases "ed" -> writes "d"
+      const eTypo = appendExtraPath(cache.typoGroup, E_GLYPH_PATH, 411.6602);
+      const dTypo = appendExtraPath(cache.typoGroup, d.path.getAttribute("d"), 75.7422);
+      [A, r, t, F, i, n, eTypo, dTypo].forEach((it) => pushDraw(it));
+      pushPause(380);
+      pushErase([eTypo, dTypo], 720);
+      pushDraw(d, 0.92);
+    } else if (key === "atrFind") {
+      // Misspells "Atr" -> pauses -> erases "tr" -> writes "rtFind"
+      const tTypo = appendExtraPath(cache.typoGroup, t.path.getAttribute("d"), -77.2461);
+      const rTypo = appendExtraPath(cache.typoGroup, r.path.getAttribute("d"), 56.6016);
+      [A, tTypo, rTypo].forEach((it) => pushDraw(it));
+      pushPause(340);
+      pushErase([tTypo, rTypo], 640);
+      [r, t, F, i, n, d].forEach((it) => pushDraw(it, 0.95));
+    } else {
+      // Writes "ArtFind" cleanly, then adds a sparkle star and underline swoosh
+      const star = appendExtraPath(cache.flourishGroup, STAR_PATH, 0);
+      const swoosh = appendExtraPath(cache.flourishGroup, SWOOSH_PATH, 0);
+      [A, r, t, F, i, n, d].forEach((it) => pushDraw(it));
+      pushPause(220);
+      pushDraw(star, 0.85);
+      pushDraw(swoosh, 0.45);
+    }
+
+    return { steps, totalMs: cursor };
+  }
+
+  function renderFooterTimeline(cache, timeline, elapsedMs) {
+    let tipPoint = cache.mainItems[0].startPt;
+    let usingEraser = false;
+    let eraserPoint = tipPoint;
+
+    for (const step of timeline.steps) {
+      if (elapsedMs < step.startMs) break;
+
+      if (step.kind === "draw") {
+        if (elapsedMs >= step.endMs) {
+          step.item.path.style.strokeDashoffset = "0";
+          tipPoint = step.item.endPt;
+        } else {
+          const localT = (elapsedMs - step.startMs) / (step.endMs - step.startMs);
+          const eased = easeInOutCubic(localT);
+          const drawn = eased * step.item.len;
+          step.item.path.style.strokeDashoffset = `${(step.item.len - drawn).toFixed(2)}`;
+          const pt = step.item.path.getPointAtLength(drawn);
+          tipPoint = { x: pt.x + step.item.dx, y: pt.y };
+        }
+      } else if (step.kind === "move") {
+        if (elapsedMs < step.endMs) {
+          const localT = (elapsedMs - step.startMs) / (step.endMs - step.startMs);
+          const eased = easeInOutSine(localT);
+          tipPoint = {
+            x: step.from.x + (step.to.x - step.from.x) * eased,
+            y: step.from.y + (step.to.y - step.from.y) * eased - Math.sin(Math.PI * localT) * 6
+          };
+        } else {
+          tipPoint = step.to;
+        }
+      } else if (step.kind === "pause") {
+        if (elapsedMs < step.endMs) {
+          const localT = (elapsedMs - step.startMs) / (step.endMs - step.startMs);
+          tipPoint = {
+            x: step.at.x + Math.sin(localT * Math.PI * 2) * 1.5,
+            y: step.at.y - 4
+          };
+        } else {
+          tipPoint = step.at;
+        }
+      } else if (step.kind === "erase") {
+        if (elapsedMs >= step.endMs) {
+          for (const tgt of step.targets) {
+            tgt.path.style.strokeDashoffset = `${tgt.len.toFixed(2)}`;
+            tgt.path.style.opacity = "0";
+          }
+          tipPoint = step.targets[step.targets.length - 1].startPt;
+        } else {
+          usingEraser = true;
+          const localT = (elapsedMs - step.startMs) / (step.endMs - step.startMs);
+          const count = step.targets.length;
+          const seg = Math.min(count - 1, Math.floor(localT * count));
+          const segT = localT * count - seg;
+
+          for (let idx = 0; idx < count; idx++) {
+            const tgt = step.targets[idx];
+            if (idx < seg) {
+              tgt.path.style.strokeDashoffset = `${tgt.len.toFixed(2)}`;
+              tgt.path.style.opacity = "0";
+            } else if (idx === seg) {
+              const remain = (1 - easeInOutSine(segT)) * tgt.len;
+              tgt.path.style.strokeDashoffset = `${(tgt.len - remain).toFixed(2)}`;
+              const pt = tgt.path.getPointAtLength(remain);
+              const scrubX = Math.sin(localT * Math.PI * 10) * 12;
+              const scrubY = Math.cos(localT * Math.PI * 10) * 4;
+              eraserPoint = { x: pt.x + tgt.dx + scrubX, y: pt.y + scrubY };
+            }
+          }
+        }
       }
     }
 
-    for (const mv of moves) {
-      if (t > mv.start && t < mv.end) {
-        const localT = (t - mv.start) / (mv.end - mv.start);
-        const easedMove = easeInOutSine(localT);
-        tipPoint = {
-          x: mv.from.x + (mv.to.x - mv.from.x) * easedMove,
-          y: mv.from.y + (mv.to.y - mv.from.y) * easedMove - Math.sin(Math.PI * localT) * 6
-        };
-        break;
-      }
+    if (usingEraser) {
+      cache.nib.style.opacity = "0";
+      cache.eraser.style.opacity = "1";
+      cache.eraser.setAttribute("transform", `translate(${(eraserPoint.x - 16).toFixed(1)} ${(eraserPoint.y - 26).toFixed(1)})`);
+    } else {
+      cache.eraser.style.opacity = "0";
+      cache.nib.style.opacity = "1";
+      cache.nib.setAttribute("transform", `translate(${(tipPoint.x - 12).toFixed(1)} ${(tipPoint.y - 52).toFixed(1)})`);
     }
-
-    nib.setAttribute("transform", `translate(${(tipPoint.x - 12).toFixed(1)} ${(tipPoint.y - 52).toFixed(1)})`);
   }
 
   function stepFooterAnimation(now) {
-    if (!footerAtBottom) {
+    if (!footerAtBottom || !footerTimeline) {
       footerAnimRaf = null;
       return;
     }
 
-    const t = Math.min(1, Math.max(0, (now - footerAnimStart) / FOOTER_DRAW_DURATION_MS));
-    const wordEased = easeInOutSine(t);
-    renderFooterWriting(wordEased);
+    const cache = initFooterWriting();
+    if (!cache) {
+      footerAnimRaf = null;
+      return;
+    }
 
-    if (t < 1) {
+    const elapsedMs = Math.min(footerTimeline.totalMs, Math.max(0, now - footerAnimStart));
+    renderFooterTimeline(cache, footerTimeline, elapsedMs);
+
+    if (elapsedMs < footerTimeline.totalMs) {
       footerAnimRaf = requestAnimationFrame(stepFooterAnimation);
     } else {
       footerAnimRaf = null;
@@ -628,7 +767,10 @@
     if (!cache) return;
 
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      renderFooterWriting(1);
+      for (const it of cache.mainItems) {
+        it.path.style.strokeDashoffset = "0";
+        it.path.style.opacity = "1";
+      }
       return;
     }
 
@@ -640,18 +782,20 @@
 
     if (reachedBottom && !footerAtBottom) {
       footerAtBottom = true;
+      footerTimeline = buildFooterScenario(cache);
       footerAnimStart = performance.now();
       if (footerAnimRaf) cancelAnimationFrame(footerAnimRaf);
       footerAnimRaf = requestAnimationFrame(stepFooterAnimation);
     } else if (leftBottom && footerAtBottom) {
       footerAtBottom = false;
+      footerTimeline = null;
       if (footerAnimRaf) {
         cancelAnimationFrame(footerAnimRaf);
         footerAnimRaf = null;
       }
-      renderFooterWriting(0);
+      resetFooterPaths(cache);
     } else if (!footerAtBottom) {
-      renderFooterWriting(0);
+      resetFooterPaths(cache);
     }
   }
 
