@@ -13,6 +13,8 @@ const BSKY_PUBLIC_API = "https://public.api.bsky.app/xrpc";
 const COMMISSIONS_FEED =
   "at://did:plc:odqmsar3ikz5ubokya4sempk/app.bsky.feed.generator/aaahudddd6mww";
 
+const adultLabels = new Set(["porn", "sexual", "nudity", "graphic-media", "nsfw"]);
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -71,6 +73,12 @@ Deno.serve(async (req) => {
         continue;
       }
 
+      const labelledAdult = [post.labels, author.labels].some((labels) =>
+        Array.isArray(labels) && labels.some((label) =>
+          typeof label?.val === "string" && adultLabels.has(label.val.toLowerCase()) && !label.neg
+        )
+      );
+
       const profileUrl = `https://bsky.app/profile/${author.handle}`;
       const rkey = (post.uri ?? "").split("/").pop();
       const postUrl = rkey ? `${profileUrl}/post/${rkey}` : profileUrl;
@@ -85,6 +93,7 @@ Deno.serve(async (req) => {
             artist_page_url: profileUrl,
             artist_page_type: "bluesky",
             commission_status: "open",
+            ...(labelledAdult ? { content_rating: "nsfw" } : {}),
             source_platform: "bluesky",
             source_handle: author.handle,
             source_profile_url: profileUrl,
