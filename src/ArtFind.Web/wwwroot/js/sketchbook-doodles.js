@@ -766,7 +766,15 @@
     const cache = initFooterWriting();
     if (!cache) return;
 
+    const footer = cache.svg.closest(".footer");
+    const vh = window.innerHeight || 800;
+    const maxScroll = Math.max(0, document.documentElement.scrollHeight - vh);
+    const scrollY = window.scrollY || 0;
+    const footerRect = footer ? footer.getBoundingClientRect() : cache.svg.getBoundingClientRect();
+    const outOfView = footerRect.top >= vh;
+
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      if (footer) footer.style.setProperty("--fold-footer", outOfView ? "1" : "0");
       for (const it of cache.mainItems) {
         it.path.style.strokeDashoffset = "0";
         it.path.style.opacity = "1";
@@ -774,11 +782,16 @@
       return;
     }
 
-    const vh = window.innerHeight || 800;
-    const maxScroll = Math.max(0, document.documentElement.scrollHeight - vh);
-    const scrollY = window.scrollY || 0;
+    // Folded (1) when completely out of view below the viewport; unfolds (1 -> 0) as it enters
+    if (footer) {
+      const unfoldSpan = Math.max(120, Math.min(footerRect.height * 0.85, vh * 0.55));
+      const unfoldProgress = outOfView
+        ? 0
+        : Math.min(1, Math.max(0, (vh - footerRect.top) / unfoldSpan));
+      footer.style.setProperty("--fold-footer", (1 - unfoldProgress).toFixed(4));
+    }
+
     const reachedBottom = scrollY >= maxScroll - 4;
-    const leftBottom = scrollY < maxScroll - 48;
 
     if (reachedBottom && !footerAtBottom) {
       footerAtBottom = true;
@@ -786,7 +799,8 @@
       footerAnimStart = performance.now();
       if (footerAnimRaf) cancelAnimationFrame(footerAnimRaf);
       footerAnimRaf = requestAnimationFrame(stepFooterAnimation);
-    } else if (leftBottom && footerAtBottom) {
+    } else if (outOfView && footerAtBottom) {
+      // Only reset once the footer has gone completely out of view
       footerAtBottom = false;
       footerTimeline = null;
       if (footerAnimRaf) {

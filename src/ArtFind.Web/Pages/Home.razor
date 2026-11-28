@@ -245,15 +245,17 @@
 </main>
 
 <footer class="footer">
-    <div class="footer-inner">
-        <span>ArtFind promotes public open-for-commission artists via Bluesky AT Protocol. No full-res artwork is re-hosted.</span>
-        <span>
-            Are you an artist? Add <code>#noartfind</code> to your bio or
-            <button type="button" class="footer-link" @onclick="() => _showOptOut = true"><span class="footer-link-dash" aria-hidden="true"></span>opt out here</button>.
-        </span>
-    </div>
+    <div class="footer-rip-edge" aria-hidden="true"></div>
+    <div class="footer-sheet">
+        <div class="footer-inner">
+            <span>ArtFind promotes public open-for-commission artists via Bluesky AT Protocol. No full-res artwork is re-hosted.</span>
+            <span>
+                Are you an artist? Add <code>#noartfind</code> to your bio or
+                <button type="button" class="footer-link" @onclick="() => _showOptOut = true"><span class="footer-link-dash" aria-hidden="true"></span>opt out here</button>.
+            </span>
+        </div>
 
-    <div class="footer-giant" aria-hidden="true">
+        <div class="footer-giant" aria-hidden="true">
         <svg class="footer-write-svg" viewBox="-8 0 512 150" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
             <g class="footer-write-paths">
                 <path class="write-stroke" d="M75.05859375 74.9609375H78.88671875Q81.2109375 74.9609375 83.330078125 75.37109375Q85.44921875 75.78125 85.44921875 78.37890625Q86.40625 83.84765625 79.0234375 83.7109375Q76.97265625 83.57421875 75.263671875 83.4375Q73.5546875 83.30078125 72.4609375 83.369140625Q71.3671875 83.4375 71.50390625 84.12109375Q72.87109375 88.0859375 74.443359375 93.0078125Q76.015625 97.9296875 77.9296875 102.8515625Q82.8515625 115.01953125 87.2265625 120.3515625Q84.90234375 123.22265625 81.826171875 125.13671875Q78.75 127.05078125 78.544921875 127.05078125Q78.33984375 127.05078125 78.203125 126.9140625L58.92578125 86.30859375L21.6015625 95.46875L20.234375 101.2109375Q16.26953125 116.93359375 11.34765625 123.0859375Q10.52734375 124.453125 7.9296875 123.359375Q3.5546875 121.71875 3.5546875 120.625Q3.5546875 120.3515625 6.42578125 112.6953125Q9.296875 105.0390625 12.236328125 97.177734375Q15.17578125 89.31640625 18.388671875 80.703125Q21.6015625 72.08984375 24.47265625 64.296875Q27.34375 56.50390625 29.66796875 50.283203125Q31.9921875 44.0625 32.94921875 41.259765625Q33.90625 38.45703125 34.248046875 36.337890625Q34.58984375 34.21875 35.2734375 32.71484375Q36.640625 29.5703125 42.109375 29.5703125Q47.98828125 32.8515625 51.201171875 38.115234375Q54.4140625 43.37890625 56.669921875 49.39453125Q58.92578125 55.41015625 61.11328125 61.5625Q63.30078125 67.71484375 66.9921875 72.7734375Q68.22265625 74.6875 70.68359375 74.82421875Q73.14453125 74.9609375 75.05859375 74.9609375ZM40.87890625 45.4296875Q39.78515625 53.76953125 35.95703125 62.51953125Q32.12890625 71.26953125 29.8046875 76.123046875Q27.48046875 80.9765625 25.83984375 85.078125Q35.13671875 85.078125 48.671875 79.609375Q52.08984375 78.10546875 55.234375 76.875Q48.80859375 49.39453125 40.87890625 45.4296875Z" />
@@ -279,7 +281,8 @@
         </svg>
     </div>
 
-    <div class="footer-fade" aria-hidden="true"></div>
+        <div class="footer-fade" aria-hidden="true"></div>
+    </div>
 </footer>
 
 <ArtistSheet Match="_inspectedMatch" OnClose="() => _inspectedMatch = null" />
