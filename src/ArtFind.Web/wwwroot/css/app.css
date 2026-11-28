@@ -1596,6 +1596,10 @@ textarea {
   color: var(--accent);
 }
 
+.footer-tool-img {
+  filter: drop-shadow(2px 4px 4px rgba(35, 25, 18, 0.28));
+}
+
 .footer-fade {
   position: absolute;
   inset-inline: 0;
