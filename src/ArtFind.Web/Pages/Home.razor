@@ -2,112 +2,96 @@
 @inject IArtistCatalogService CatalogService
 @inject CommissionMatcher Matcher
 
-<header class="topbar">
-    <div class="topbar-inner">
-        <div class="brand">
-            <span class="brand-name">ArtFind</span>
-            <span class="brand-tag">Open-for-Commission Visual Artists</span>
-        </div>
+<header class="bar">
+    <div class="bar-in">
+        <a href="/" class="brand" @onclick="ResetFilters" @onclick:preventDefault="true">ArtFind</a>
 
-        <div class="topbar-actions">
-            <span class="status-pill" title="Active data backend">
-                <span class="status-dot"></span>
-                @(CatalogService.IsUsingSupabase ? "Supabase Live" : "Bluesky Snapshot")
-            </span>
-            <button type="button" class="btn btn-ghost" @onclick="() => _showOptOut = true">
-                Artist Opt-Out
+        <nav class="navrow" aria-label="Categories">
+            <button type="button"
+                    class="nav-pill @(string.IsNullOrEmpty(_selectedCategory) ? "on" : "")"
+                    @onclick="() => _selectedCategory = string.Empty">
+                All
             </button>
-        </div>
-    </div>
-</header>
-
-<main class="container">
-    <section class="hero">
-        <h1 class="hero-title">
-            Find an illustrator who is <em>open right now</em>.
-        </h1>
-        <p class="hero-subtitle">
-            Describe your Commission Brief, filter by style or budget, and jump straight to the Artist Page to commission them directly.
-        </p>
-    </section>
-
-    <section class="brief-panel" aria-label="Commission Brief and Filters">
-        <div class="brief-input-row">
-            <input class="brief-input"
-                   type="search"
-                   placeholder="Describe what you're looking for… e.g. anime fantasy character portrait, chibi Twitch emotes, pixel art"
-                   @bind="_query"
-                   @bind:event="oninput" />
-
-            @if (HasActiveFilters)
+            @foreach (var item in AvailableCategories)
             {
-                <button type="button" class="btn btn-ghost" @onclick="ResetFilters">
-                    Clear
+                var isActive = _selectedCategory.Equals(item.Tag, StringComparison.OrdinalIgnoreCase);
+                <button type="button"
+                        class="nav-pill @(isActive ? "on" : "")"
+                        @onclick="() => ToggleCategory(item.Tag)">
+                    @FormatTag(item.Tag)<span class="n">@item.Count</span>
                 </button>
             }
+        </nav>
+
+        <div class="search">
+            <input type="search"
+                   enterkeyhint="search"
+                   aria-label="Commission Brief search"
+                   placeholder="Search brief, style..."
+                   @bind="_query"
+                   @bind:event="oninput" />
+            @if (HasActiveFilters)
+            {
+                <button type="button" class="search-clear" @onclick="ResetFilters" aria-label="Clear search and filters">✕</button>
+            }
         </div>
+    </div>
 
-        <div class="brief-controls">
-            <select class="filter-select" @bind="_selectedCategory" aria-label="Filter by category">
-                <option value="">All Categories</option>
-                @foreach (var item in AvailableCategories)
-                {
-                    <option value="@item.Tag">@FormatTag(item.Tag) (@item.Count)</option>
-                }
-            </select>
-
-            <select class="filter-select" @bind="_maxBudgetValue" aria-label="Filter by maximum budget">
-                <option value="">Any Budget</option>
-                <option value="30">Up to $30</option>
-                <option value="60">Up to $60</option>
-                <option value="120">Up to $120</option>
-                <option value="250">Up to $250</option>
-            </select>
-
-            <select class="filter-select" @bind="_selectedPageType" aria-label="Filter by Artist Page platform">
-                <option value="">Any Artist Page</option>
-                <option value="VGen">VGen</option>
-                <option value="Carrd">Carrd</option>
-                <option value="Kofi">Ko-fi</option>
-                <option value="Artistree">Artistree</option>
-                <option value="Portfolio">Portfolio</option>
-                <option value="Bluesky">Bluesky</option>
-            </select>
-
-            <label style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.8rem; color: var(--ink-secondary); margin-left: auto; cursor: pointer;">
-                <input type="checkbox" @bind="_includeNsfw" />
-                Include 18+ tagged
-            </label>
-        </div>
-
-        @if (AvailableStyles.Count > 0 || AvailableCategories.Count > 0)
+    <div class="filters" aria-label="Style tags and filters">
+        <span class="lbl">Styles</span>
+        @foreach (var item in AvailableStyles.Take(10))
         {
-            <div class="chip-row" role="group" aria-label="Popular style tags">
-                @foreach (var item in AvailableStyles.Take(8))
-                {
-                    var isActive = _selectedStyles.Contains(item.Tag);
-                    <button type="button"
-                            class="chip @(isActive ? "active" : "")"
-                            @onclick="() => ToggleStyle(item.Tag)">
-                        @FormatTag(item.Tag)<span class="chip-count">@item.Count</span>
-                    </button>
-                }
-
-                <button type="button"
-                        class="chip @(_showTagBrowser ? "active" : "")"
-                        @onclick="() => _showTagBrowser = !_showTagBrowser">
-                    @(_showTagBrowser ? "Hide Tag Search" : $"Search All Tags ({TotalTagCount})")
-                </button>
-            </div>
+            var isActive = _selectedStyles.Contains(item.Tag);
+            <button type="button"
+                    class="chip @(isActive ? "on" : "")"
+                    @onclick="() => ToggleStyle(item.Tag)">
+                @FormatTag(item.Tag)<span class="n">@item.Count</span>
+            </button>
         }
 
-        @if (_showTagBrowser)
+        @if (AvailableStyles.Count > 10)
         {
-            <div class="tag-browser" aria-label="Search available tags">
+            <button type="button"
+                    class="chip @(_showTagBrowser ? "on" : "")"
+                    @onclick="() => _showTagBrowser = !_showTagBrowser">
+                @(_showTagBrowser ? "Less" : $"+{TotalTagCount} tags")
+            </button>
+        }
+
+        <span class="filter-sep" aria-hidden="true"></span>
+
+        <select class="filter-select" @bind="_maxBudgetValue" aria-label="Filter by maximum budget">
+            <option value="">Budget</option>
+            <option value="30">≤ $30</option>
+            <option value="60">≤ $60</option>
+            <option value="120">≤ $120</option>
+            <option value="250">≤ $250</option>
+        </select>
+
+        <select class="filter-select" @bind="_selectedPageType" aria-label="Filter by Artist Page platform">
+            <option value="">Platform</option>
+            <option value="VGen">VGen</option>
+            <option value="Carrd">Carrd</option>
+            <option value="Kofi">Ko-fi</option>
+            <option value="Artistree">Artistree</option>
+            <option value="Portfolio">Portfolio</option>
+            <option value="Bluesky">Bluesky</option>
+        </select>
+
+        <label class="nsfw-toggle">
+            <input type="checkbox" @bind="_includeNsfw" />
+            <span>18+</span>
+        </label>
+    </div>
+
+    @if (_showTagBrowser)
+    {
+        <div class="tag-browser-wrap">
+            <div class="tag-browser" aria-label="Search all tags">
                 <div class="tag-browser-header">
                     <input class="tag-search-input"
                            type="search"
-                           placeholder="Search available tags… e.g. anime, portrait, vtuber, chibi"
+                           placeholder="Filter all tags..."
                            @bind="_tagSearch"
                            @bind:event="oninput" />
                     @if (!string.IsNullOrWhiteSpace(_tagSearch))
@@ -119,14 +103,14 @@
                 @if (FilteredStyles.Count > 0)
                 {
                     <div class="tag-group-label">Styles (@FilteredStyles.Count)</div>
-                    <div class="chip-row" style="margin-top: 0;">
+                    <div class="tag-wrap">
                         @foreach (var item in FilteredStyles)
                         {
                             var isActive = _selectedStyles.Contains(item.Tag);
                             <button type="button"
-                                    class="chip @(isActive ? "active" : "")"
+                                    class="chip @(isActive ? "on" : "")"
                                     @onclick="() => ToggleStyle(item.Tag)">
-                                @FormatTag(item.Tag)<span class="chip-count">@item.Count</span>
+                                @FormatTag(item.Tag)<span class="n">@item.Count</span>
                             </button>
                         }
                     </div>
@@ -135,14 +119,14 @@
                 @if (FilteredCategories.Count > 0)
                 {
                     <div class="tag-group-label">Categories (@FilteredCategories.Count)</div>
-                    <div class="chip-row" style="margin-top: 0;">
+                    <div class="tag-wrap">
                         @foreach (var item in FilteredCategories)
                         {
                             var isActive = _selectedCategory.Equals(item.Tag, StringComparison.OrdinalIgnoreCase);
                             <button type="button"
-                                    class="chip @(isActive ? "active" : "")"
+                                    class="chip @(isActive ? "on" : "")"
                                     @onclick="() => ToggleCategory(item.Tag)">
-                                @FormatTag(item.Tag)<span class="chip-count">@item.Count</span>
+                                @FormatTag(item.Tag)<span class="n">@item.Count</span>
                             </button>
                         }
                     </div>
@@ -150,46 +134,58 @@
 
                 @if (FilteredStyles.Count == 0 && FilteredCategories.Count == 0)
                 {
-                    <p style="margin: 6px 0 0; font-size: 0.82rem; color: var(--ink-muted);">
-                        No tags match "@_tagSearch". Try typing it directly into the Commission Brief box above to search artist bios.
-                    </p>
+                    <p class="tag-empty">No tags match "@_tagSearch".</p>
                 }
             </div>
-        }
+        </div>
+    }
+</header>
+
+<main class="container">
+    <section class="hero">
+        <h1 class="hero-title">
+            Find an illustrator <em>open for work</em>
+        </h1>
+        <p class="hero-subtitle">
+            Browse by category or style, then go directly to the Artist Page.
+        </p>
     </section>
 
-    <div class="results-bar">
-        <span>
-            @if (_loading)
-            {
-                <text>Loading open artists…</text>
-            }
-            else
-            {
-                <strong>@Matches.Count</strong> <text>open @(Matches.Count == 1 ? "artist" : "artists") matched</text>
-                @if (_snapshot is not null)
-                {
-                    <text> · indexed @_snapshot.GeneratedAt.ToLocalTime().ToString("MMM d, HH:mm")</text>
-                }
-            }
-        </span>
-        <span>Redirects directly to each Artist Page</span>
-    </div>
+    @if (!_loading && _loadError is null)
+    {
+        <div class="results-bar">
+            <span class="mono">@Matches.Count @(Matches.Count == 1 ? "artist" : "artists")</span>
+        </div>
+    }
 
     @if (_loading)
     {
-        <div class="empty-state">
-            <p style="margin: 0; color: var(--ink-muted);">Fetching open-for-commission artists…</p>
+        <section class="gallery-grid" aria-label="Loading artists">
+            @for (var i = 0; i < 6; i++)
+            {
+                <div class="skeleton-card" aria-hidden="true">
+                    <div class="skeleton-media"></div>
+                    <div class="skeleton-line skeleton-line-lg"></div>
+                    <div class="skeleton-line skeleton-line-sm"></div>
+                    <div class="skeleton-line skeleton-line-md"></div>
+                </div>
+            }
+        </section>
+    }
+    else if (_loadError is not null)
+    {
+        <div class="empty-state" role="alert">
+            <h2 class="empty-title">Could not load artist directory</h2>
+            <p class="empty-copy">@_loadError</p>
+            <button type="button" class="btn btn-primary" @onclick="LoadCatalogAsync">Retry</button>
         </div>
     }
     else if (Matches.Count == 0)
     {
         <div class="empty-state">
-            <h2 style="margin: 0 0 8px; font-family: 'Instrument Serif', Georgia, serif; font-size: 1.7rem; font-weight: 400;">
-                No matching open artists right now
-            </h2>
-            <p style="margin: 0 0 16px; color: var(--ink-secondary); font-size: 0.9rem;">
-                Try broadening your Commission Brief or clearing one of the filters.
+            <h2 class="empty-title">No matching open artists</h2>
+            <p class="empty-copy">
+                Try broadening your Commission Brief or clearing one of the active filters.
             </p>
             <button type="button" class="btn btn-primary" @onclick="ResetFilters">Reset Filters</button>
         </div>
@@ -210,7 +206,10 @@
 <footer class="footer">
     <div class="footer-inner">
         <span>ArtFind promotes public open-for-commission artists via Bluesky AT Protocol. No full-res artwork is re-hosted.</span>
-        <span>Are you an artist? Add <code>#noartfind</code> to your bio or use Artist Opt-Out anytime.</span>
+        <span>
+            Are you an artist? Add <code>#noartfind</code> to your bio or
+            <button type="button" class="footer-link" @onclick="() => _showOptOut = true">opt out here</button>.
+        </span>
     </div>
 </footer>
 
@@ -231,11 +230,26 @@
     private bool _showOptOut;
     private bool _showTagBrowser;
     private string _tagSearch = string.Empty;
+    private string? _loadError;
 
-    protected override async Task OnInitializedAsync()
+    protected override Task OnInitializedAsync() => LoadCatalogAsync();
+
+    private async Task LoadCatalogAsync()
     {
-        _snapshot = await CatalogService.LoadCatalogAsync();
-        _loading = false;
+        _loading = true;
+        _loadError = null;
+        try
+        {
+            _snapshot = await CatalogService.LoadCatalogAsync();
+        }
+        catch (Exception ex)
+        {
+            _loadError = ex.Message;
+        }
+        finally
+        {
+            _loading = false;
+        }
     }
 
     private IReadOnlyList<(string Tag, int Count)> AvailableStyles =>
