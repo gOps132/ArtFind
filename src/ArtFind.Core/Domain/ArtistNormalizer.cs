@@ -63,6 +63,15 @@ public static partial class ArtistNormalizer
         "portfolio"
     ];
 
+    public static bool HasAdultContentSignal(params string?[] texts) =>
+        texts.Any(text => text is not null && AdultContentRegex().IsMatch(NotAdultContentRegex().Replace(text, " ")));
+
+    [GeneratedRegex(@"🔞|(?<!\w)(?:18\+|\+18)(?!\w)|\b(?:nsfw|adults?[- ]only|adult content|no minors|minors dni)\b", RegexOptions.IgnoreCase)]
+    private static partial Regex AdultContentRegex();
+
+    [GeneratedRegex(@"\b(?:no\s+(?:nsfw|adult content)|nsfw[- ]free)\b|\bsfw\s*\(nsfw on [^)]*\)", RegexOptions.IgnoreCase)]
+    private static partial Regex NotAdultContentRegex();
+
     public static bool HasOptOutSignal(params string?[] texts)
     {
         foreach (var text in texts)

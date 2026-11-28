@@ -49,6 +49,21 @@ public sealed class MastodonSourceAdapterTests
     }
 
     [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task ClassifiesAdultSignalsInBioOrRecentPost(bool fromBio)
+    {
+        var account = JsonNode.Parse(Account)!;
+        var post = Post();
+        if (fromBio) account["note"] = "<p>18+ only | commissions open</p>";
+        else post["content"] = "<p>Minors DNI</p>";
+        using var handler = new Responses(account.ToJsonString(), new JsonArray(post).ToJsonString());
+        using var http = new HttpClient(handler);
+        var artist = Assert.Single(await new MastodonSourceAdapter(http, [Profile]).FetchOpenArtistsAsync(new()));
+        Assert.Equal(ContentRating.Nsfw, artist.ContentRating);
+    }
+
+    [Theory]
     [InlineData("unlisted")]
     [InlineData("boost")]
     [InlineData("reply")]

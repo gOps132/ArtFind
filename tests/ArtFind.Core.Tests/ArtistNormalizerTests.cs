@@ -5,6 +5,21 @@ namespace ArtFind.Core.Tests;
 
 public class ArtistNormalizerTests
 {
+    [Theory]
+    [InlineData("Rarely posts 18+ content", true)]
+    [InlineData("🔞 Commissions open", true)]
+    [InlineData("SFW / NSFW", true)]
+    [InlineData("Minors DNI", true)]
+    [InlineData("Adults-only", true)]
+    [InlineData("NO NSFW", false)]
+    [InlineData("SFW (NSFW on another account)", false)]
+    [InlineData("No adult content | portraits", false)]
+    [InlineData("No NSFW commissions | 🔞 personal art", true)]
+    [InlineData("118+ illustrations", false)]
+    [InlineData(null, false)]
+    public void HasAdultContentSignal_RecognizesWarningsWithoutTreatingNegationsAsWarnings(string? text, bool expected)
+        => Assert.Equal(expected, ArtistNormalizer.HasAdultContentSignal(text));
+
     [Fact]
     public void SelectCanonicalArtistPage_PrefersExternalCommissionLinkOverBlueskyProfile()
     {

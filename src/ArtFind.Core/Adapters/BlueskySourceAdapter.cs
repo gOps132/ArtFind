@@ -127,7 +127,8 @@ public sealed class BlueskySourceAdapter : SourceAdapterBase
             if (previews.Count == 0)
                 continue;
 
-            var isNsfw = acc.HasNsfwLabel || (profile?.HasNsfwLabel ?? false) || (pinnedPost?.HasNsfwLabel ?? false);
+            var isNsfw = acc.HasNsfwLabel || (profile?.HasNsfwLabel ?? false) || (pinnedPost?.HasNsfwLabel ?? false) ||
+                ArtistNormalizer.HasAdultContentSignal(profile?.DisplayName ?? acc.DisplayName, bio, pinnedText, latestPostText);
 
             var artist = new Artist
             {
@@ -188,7 +189,7 @@ public sealed class BlueskySourceAdapter : SourceAdapterBase
 
             acc.DisplayName ??= parsed.AuthorDisplayName;
             acc.AvatarUrl ??= parsed.AuthorAvatar;
-            acc.HasNsfwLabel |= parsed.HasNsfwLabel;
+            acc.HasNsfwLabel |= parsed.HasNsfwLabel || ArtistNormalizer.HasAdultContentSignal(parsed.Text);
             acc.FacetUrls.AddRange(parsed.FacetUrls);
             acc.Previews.AddRange(parsed.Previews);
 

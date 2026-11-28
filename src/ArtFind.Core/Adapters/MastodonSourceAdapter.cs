@@ -94,6 +94,10 @@ public sealed partial class MastodonSourceAdapter(HttpClient http, IReadOnlyList
                 AvatarUrl = WebUrl(account.AvatarStatic),
                 ArtistPageUrl = pageUrl,
                 ArtistPageType = pageType,
+                ContentRating = ArtistNormalizer.HasAdultContentSignal(name, bio) ||
+                    fields.Any(f => ArtistNormalizer.HasAdultContentSignal(f.Name, PlainText(f.Value))) ||
+                    recent.Any(p => ArtistNormalizer.HasAdultContentSignal(p.Text))
+                    ? ContentRating.Nsfw : ContentRating.Sfw,
                 StyleTags = styles,
                 CategoryTags = categories,
                 PriceRange = ArtistNormalizer.ExtractPriceRange(signal.Text, bio),
