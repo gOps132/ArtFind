@@ -1465,31 +1465,20 @@ textarea {
   user-select: none;
 }
 
-.footer-wordmark-wrap {
-  position: relative;
-  display: inline-block;
-  margin-bottom: -0.22em;
+.footer-write-svg {
+  width: min(1160px, 100%);
+  height: auto;
+  margin-bottom: -1.5%;
+  color: oklch(0.2 0.018 55 / 0.24);
+  overflow: visible;
 }
 
-.footer-wordmark {
-  display: block;
-  font-family: "Architects Daughter", cursive, sans-serif;
-  font-size: clamp(4.2rem, 19vw, 15.5rem);
-  font-weight: 700;
-  line-height: 0.92;
-  color: oklch(0.2 0.018 55 / 0.18);
-  clip-path: inset(0 calc((1 - var(--write, 0)) * 100%) 0 0);
+.write-stroke {
+  stroke-width: 2.6;
 }
 
 .footer-pen-nib {
-  position: absolute;
-  left: calc(var(--write, 0) * 100%);
-  bottom: 24%;
-  width: clamp(2.8rem, 8.5vw, 6.8rem);
-  height: auto;
   color: var(--accent);
-  transform: translate(-18%, var(--pen-bob, 0px));
-  opacity: calc(min(1, var(--write, 0) * 6));
 }
 
 .footer-fade {
@@ -1557,8 +1546,6 @@ textarea {
 @media (prefers-reduced-motion: reduce) {
   .btn, .chip, .nav-pill, .artist-card, .card-media img, .copy-icon { transition-duration: 0.01ms !important; }
   .hero-squiggle path { animation: none; stroke-dashoffset: 0; }
-  .footer-wordmark { clip-path: none; }
-  .footer-pen-nib { opacity: 1; left: 100%; transform: translate(-18%, 0); }
 }
 
 @media (pointer: coarse) {

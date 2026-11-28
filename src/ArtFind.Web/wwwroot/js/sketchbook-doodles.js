@@ -502,26 +502,64 @@
     bar.classList.toggle("is-compact", fullyFolded);
   }
 
-  function updateFooterWriting() {
-    const wrap = document.querySelector(".footer-wordmark-wrap");
-    if (!wrap) return;
+  let footerStrokeCache = null;
 
+  function initFooterWriting() {
+    const svg = document.querySelector(".footer-write-svg");
+    if (!svg) return null;
+
+    if (!footerStrokeCache || !footerStrokeCache.svg.isConnected) {
+      const paths = Array.from(svg.querySelectorAll(".write-stroke"));
+      const nib = svg.querySelector(".footer-pen-nib");
+      if (paths.length === 0 || !nib) return null;
+
+      const items = paths.map((p) => {
+        const len = p.getTotalLength();
+        p.style.strokeDasharray = `${len}`;
+        return { path: p, len };
+      });
+      const totalLen = items.reduce((s, it) => s + it.len, 0);
+      footerStrokeCache = { svg, items, totalLen, nib };
+    }
+
+    return footerStrokeCache;
+  }
+
+  function updateFooterWriting() {
+    const cache = initFooterWriting();
+    if (!cache) return;
+
+    const { svg, items, totalLen, nib } = cache;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      wrap.style.setProperty("--write", "1");
-      wrap.style.setProperty("--pen-bob", "0px");
+      for (const it of items) it.path.style.strokeDashoffset = "0";
       return;
     }
 
-    const rect = wrap.getBoundingClientRect();
     const vh = window.innerHeight || 800;
-    const startY = vh * 0.98;
-    const endY = vh * 0.65;
-    const raw = (startY - rect.top) / Math.max(80, startY - endY);
-    const progress = Math.min(1, Math.max(0, raw));
+    const maxScroll = Math.max(1, document.documentElement.scrollHeight - vh);
+    const rect = svg.getBoundingClientRect();
+    const span = Math.max(180, rect.height * 1.4);
+    const startScroll = Math.max(0, maxScroll - span);
+    const progress = Math.min(1, Math.max(0, (window.scrollY - startScroll) / Math.max(80, maxScroll - startScroll)));
 
-    const bob = Math.sin(progress * Math.PI * 14) * (progress > 0.02 && progress < 0.98 ? 10 : 0);
-    wrap.style.setProperty("--write", progress.toFixed(4));
-    wrap.style.setProperty("--pen-bob", `${bob.toFixed(1)}px`);
+    let remaining = progress * totalLen;
+    let tipPoint = items[0].path.getPointAtLength(0);
+
+    for (const it of items) {
+      if (remaining >= it.len) {
+        it.path.style.strokeDashoffset = "0";
+        tipPoint = it.path.getPointAtLength(it.len);
+        remaining -= it.len;
+      } else if (remaining > 0) {
+        it.path.style.strokeDashoffset = `${(it.len - remaining).toFixed(2)}`;
+        tipPoint = it.path.getPointAtLength(remaining);
+        remaining = 0;
+      } else {
+        it.path.style.strokeDashoffset = `${it.len.toFixed(2)}`;
+      }
+    }
+
+    nib.setAttribute("transform", `translate(${(tipPoint.x - 12).toFixed(1)} ${(tipPoint.y - 52).toFixed(1)})`);
   }
 
   function scheduleSync() {
