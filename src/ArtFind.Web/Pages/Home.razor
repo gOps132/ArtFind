@@ -10,10 +10,6 @@
         </div>
 
         <div class="topbar-actions">
-            <span class="status-pill" title="Active data backend">
-                <span class="status-dot" aria-hidden="true"></span>
-                <span class="mono">@(CatalogService.IsUsingSupabase ? "LIVE" : "SNAPSHOT")</span>
-            </span>
             <button type="button" class="btn btn-ghost" @onclick="() => _showOptOut = true">
                 Artist Opt-Out
             </button>
@@ -166,23 +162,12 @@
         }
     </section>
 
-    <div class="results-bar">
-        <span>
-            @if (_loading)
-            {
-                <text>Loading open artists…</text>
-            }
-            else
-            {
-                <strong>@Matches.Count</strong> <text>open @(Matches.Count == 1 ? "artist" : "artists") matched</text>
-                @if (_snapshot is not null)
-                {
-                    <text> · indexed @_snapshot.GeneratedAt.ToLocalTime().ToString("MMM d, HH:mm")</text>
-                }
-            }
-        </span>
-        <span>Redirects directly to each Artist Page</span>
-    </div>
+    @if (!_loading && _loadError is null)
+    {
+        <div class="results-bar">
+            <span class="mono">@Matches.Count @(Matches.Count == 1 ? "artist" : "artists")</span>
+        </div>
+    }
 
     @if (_loading)
     {

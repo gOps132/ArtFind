@@ -13,17 +13,12 @@
                  decoding="async" />
         }
 
-        <div class="media-badge-row">
-            <span class="open-badge">
-                <span class="status-dot" aria-hidden="true"></span>
-                Open
-            </span>
-
-            @if (Artist.PriceRange is not null)
-            {
+        @if (Artist.PriceRange is not null)
+        {
+            <div class="media-badge-row">
                 <span class="price-badge mono">@Artist.PriceRange.RawText</span>
-            }
-        </div>
+            </div>
+        }
 
         @if (Artist.Previews.Count > 1)
         {
