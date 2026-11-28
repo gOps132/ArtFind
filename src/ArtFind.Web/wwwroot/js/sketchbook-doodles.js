@@ -464,10 +464,23 @@
     if (!bar) return;
 
     const y = window.scrollY || 0;
-    const fold = Math.min(1, Math.max(0, y / 110));
-    bar.style.setProperty("--fold", fold.toFixed(3));
+    const hasTagBrowser = Boolean(bar.querySelector(".tag-browser-wrap"));
 
-    if (y > 95) {
+    let foldTags = 0;
+    let foldHero = 0;
+    if (hasTagBrowser) {
+      // Stage 1: Tag search folds first (0..80px), Stage 2: Hero folds second (80..170px)
+      foldTags = Math.min(1, Math.max(0, y / 80));
+      foldHero = Math.min(1, Math.max(0, (y - 80) / 90));
+    } else {
+      foldHero = Math.min(1, Math.max(0, y / 110));
+    }
+
+    bar.style.setProperty("--fold-tags", foldTags.toFixed(3));
+    bar.style.setProperty("--fold-hero", foldHero.toFixed(3));
+    bar.style.setProperty("--fold", foldHero.toFixed(3));
+
+    if (foldHero >= 0.96) {
       bar.classList.add("is-compact");
     } else if (y < 16) {
       bar.classList.remove("is-compact");

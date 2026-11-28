@@ -245,7 +245,7 @@ textarea {
   z-index: 1;
 }
 
-/* Non-repeating organic torn-paper edge: tucks away as the sheet folds */
+/* Non-repeating organic torn-paper edge: physically flattens into crease without fading */
 .bar::after {
   content: "";
   position: absolute;
@@ -255,20 +255,19 @@ textarea {
   height: 14px;
   pointer-events: none;
   transform-origin: top center;
-  transform: scaleY(calc(1 - var(--fold, 0)));
-  opacity: calc(1 - var(--fold, 0));
+  transform: scaleY(calc(1 - var(--fold-hero, 0)));
   background-repeat: no-repeat;
   background-size: 100% 14px;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1600 14' preserveAspectRatio='none'%3E%3Cpath d='M0 0 L1600 0 L1600 4 L1548 7 L1512 3 L1466 5 L1431 11 L1384 6 L1338 8 L1292 2 L1247 5 L1214 10 L1162 4 L1115 6 L1068 3 L1033 9 L982 5 L936 12 L884 7 L841 4 L792 8 L748 3 L695 6 L651 11 L602 4 L558 7 L512 2 L468 9 L419 5 L374 11 L321 4 L276 7 L228 3 L184 10 L132 5 L86 8 L39 3 L0 6 Z' fill='%23ede3cf'/%3E%3C/svg%3E");
 }
 
-/* Full-width 3D Origami paper-fold landing flap */
+/* Full-width 3D Origami paper-fold landing flap (Fold 2) */
 .bar-landing {
   position: relative;
   z-index: 1;
   perspective: 1200px;
   overflow: hidden;
-  max-height: calc((1 - var(--fold, 0)) * 220px);
+  max-height: calc((1 - var(--fold-hero, 0)) * 220px);
 }
 
 .bar.is-compact .bar-landing {
@@ -280,7 +279,7 @@ textarea {
   width: 100%;
   background-color: oklch(0.925 0.02 83);
   transform-origin: top center;
-  transform: rotateX(calc(var(--fold, 0) * -86deg));
+  transform: rotateX(calc(var(--fold-hero, 0) * -86deg));
   backface-visibility: hidden;
   will-change: transform;
 }
@@ -297,7 +296,7 @@ textarea {
     oklch(0.2 0.018 55 / 0.08) 55%,
     transparent 100%
   );
-  opacity: var(--fold, 0);
+  opacity: var(--fold-hero, 0);
 }
 
 .bar-landing-inner {
@@ -558,13 +557,14 @@ textarea {
   margin-left: 4px;
 }
 
+/* Fold 1: Tag search section folds first on scroll */
 .tag-browser-wrap {
+  perspective: 1200px;
   overflow: hidden;
   max-width: 1280px;
   margin: 0 auto;
-  max-height: calc((1 - var(--fold, 0)) * 420px);
-  opacity: calc(1 - var(--fold, 0));
-  padding: 0 max(24px, env(safe-area-inset-right)) calc((1 - var(--fold, 0)) * 14px) max(24px, env(safe-area-inset-left));
+  max-height: calc((1 - var(--fold-tags, 0)) * 420px);
+  padding: 0 max(24px, env(safe-area-inset-right)) calc((1 - var(--fold-tags, 0)) * 14px) max(24px, env(safe-area-inset-left));
 }
 
 .bar.is-compact .tag-browser-wrap {
@@ -573,6 +573,10 @@ textarea {
 
 .tag-browser-clip {
   position: relative;
+  transform-origin: top center;
+  transform: rotateX(calc(var(--fold-tags, 0) * -86deg));
+  backface-visibility: hidden;
+  will-change: transform;
 }
 
 @media (prefers-reduced-motion: reduce) {
