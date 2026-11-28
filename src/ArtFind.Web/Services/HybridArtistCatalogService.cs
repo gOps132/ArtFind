@@ -19,6 +19,11 @@ public sealed class HybridArtistCatalogService : IArtistCatalogService
         PropertyNameCaseInsensitive = true
     };
 
+    private static readonly JsonSerializerOptions SupabaseJsonOptions = new()
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower
+    };
+
     private readonly HttpClient _http;
     private readonly SupabaseOptions _supabase;
     private readonly IJSRuntime _js;
@@ -40,7 +45,7 @@ public sealed class HybridArtistCatalogService : IArtistCatalogService
         {
             var fromSupabase = await TryLoadFromSupabaseAsync(cancellationToken);
             if (fromSupabase is not null)
-                return FilterOptOuts(fromSupabase, localOptOuts);
+                return ApplyCatalogRules(fromSupabase, localOptOuts);
         }
 
         var snapshot = await _http.GetFromJsonAsync<ArtistCatalogSnapshot>(
@@ -49,7 +54,7 @@ public sealed class HybridArtistCatalogService : IArtistCatalogService
             cancellationToken);
 
         snapshot ??= new ArtistCatalogSnapshot(DateTimeOffset.UtcNow, ["bluesky"], []);
-        return FilterOptOuts(snapshot, localOptOuts);
+        return ApplyCatalogRules(snapshot, localOptOuts);
     }
 
     public async Task<bool> SubmitOptOutAsync(
@@ -109,7 +114,7 @@ public sealed class HybridArtistCatalogService : IArtistCatalogService
             using var res = await _http.SendAsync(req, ct);
             if (!res.IsSuccessStatusCode) return null;
 
-            var rows = await res.Content.ReadFromJsonAsync<List<SupabaseArtistRow>>(JsonOptions, ct);
+            var rows = await res.Content.ReadFromJsonAsync<List<SupabaseArtistRow>>(SupabaseJsonOptions, ct);
             if (rows is null) return null;
 
             var artists = rows.Select(MapSupabaseRow).ToList();
@@ -138,12 +143,13 @@ public sealed class HybridArtistCatalogService : IArtistCatalogService
         }
     }
 
-    private static ArtistCatalogSnapshot FilterOptOuts(ArtistCatalogSnapshot snapshot, HashSet<string> optOuts)
+    private static ArtistCatalogSnapshot ApplyCatalogRules(ArtistCatalogSnapshot snapshot, HashSet<string> optOuts)
     {
-        if (optOuts.Count == 0) return snapshot;
-
         var filtered = snapshot.Artists
             .Where(a => !a.SourceProfiles.Any(sp => optOuts.Contains(sp.Handle.TrimStart('@'))))
+            .Select(a => a.ContentRating == ContentRating.Sfw &&
+                ArtistNormalizer.HasAdultContentSignal(a.DisplayName, a.BioSnippet)
+                ? a with { ContentRating = ContentRating.Nsfw } : a)
             .ToList();
 
         return snapshot with { Artists = filtered };
