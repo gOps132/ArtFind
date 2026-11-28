@@ -13,7 +13,7 @@
 <br />
 <div align="center">
   <a href="https://github.com/gOps132/ArtFind">
-    <img src="Logo.png" alt="ArtFind Logo" width="520" />
+    <img src="assets/logo.svg" alt="ArtFind Logo" width="96" height="96" />
   </a>
 
   <h3 align="center">ArtFind</h3>
@@ -65,6 +65,12 @@
 
 <!-- ABOUT THE PROJECT -->
 ## About The Project
+
+<div align="center">
+  <img src="assets/logo.png" alt="ArtFind Sketchbook Wordmark" width="640" />
+</div>
+
+<br />
 
 ArtFind helps commissioners find visual illustrators and digital artists who are **currently open for commissions** across decentralized social feeds—without re-hosting full-resolution artwork.
 
