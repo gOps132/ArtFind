@@ -502,7 +502,36 @@
     bar.classList.toggle("is-compact", fullyFolded);
   }
 
+  let footerObserved = false;
+
+  function observeFooter() {
+    if (footerObserved) return;
+    const target = document.querySelector(".footer-giant");
+    if (!target) return;
+
+    footerObserved = true;
+    if (typeof IntersectionObserver === "undefined") {
+      target.classList.add("is-in");
+      return;
+    }
+
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            target.classList.add("is-in");
+          } else {
+            target.classList.remove("is-in");
+          }
+        }
+      },
+      { threshold: 0.1 }
+    );
+    io.observe(target);
+  }
+
   function scheduleSync() {
+    observeFooter();
     syncHeaderState();
     if (rafPending) return;
     rafPending = true;
