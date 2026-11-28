@@ -931,10 +931,10 @@
           const localT = (elapsedMs - step.startMs) / (step.endMs - step.startMs);
           if (footer) footer.classList.add("is-ripping");
           if (sheet) {
-            // Phase 1 (0..0.46): curved-out tear sweeps left-to-right; Phase 2 (0.46..1): curved 3D peel
-            const tearFrac = Math.min(1, localT / 0.46);
-            const peelT = Math.max(0, (localT - 0.30) / 0.70);
-            const peelEase = easeInOutCubic(peelT);
+            // Phase 1 (0..0.40): curved tear sweeps across; Phase 2 (0.40..1): curls outward & rips off-screen (no fade)
+            const tearFrac = Math.min(1, localT / 0.40);
+            const peelT = Math.max(0, (localT - 0.28) / 0.72);
+            const peelEase = peelT * peelT * (1.2 - 0.2 * peelT);
 
             if (tearFrac < 0.995) {
               const pts = [];
@@ -955,17 +955,18 @@
                 "polygon(0% 8%, 12% 13%, 25% 17%, 38% 19%, 50% 20%, 62% 19%, 75% 16%, 88% 11%, 100% 4%, 100% 100%, 0% 100%)";
             }
 
-            const tx = peelEase * 68;
-            const ty = localT * 22 + peelEase * 235;
-            const rotZ = -localT * 5 - peelEase * 16;
-            const rotX = -peelEase * 30;
-            const rotY = peelEase * 18;
-            const skewX = -peelEase * 7;
-            const sc = 1 - peelEase * 0.08;
+            const vw = window.innerWidth || 1200;
+            const tx = peelEase * (vw * 1.15);
+            const ty = -localT * 18 - peelEase * 140;
+            const rotZ = -localT * 4 - peelEase * 24;
+            const rotX = peelEase * 28;
+            const rotY = -peelEase * 26;
+            const skewY = -peelEase * 8;
+            const sc = 1 + Math.sin(peelT * Math.PI) * 0.06;
 
-            sheet.style.transform = `perspective(1000px) translate3d(${tx.toFixed(1)}px, ${ty.toFixed(1)}px, 0) rotateX(${rotX.toFixed(2)}deg) rotateY(${rotY.toFixed(2)}deg) rotateZ(${rotZ.toFixed(2)}deg) skewX(${skewX.toFixed(2)}deg) scale(${sc.toFixed(3)})`;
-            sheet.style.filter = `drop-shadow(0 ${(12 + peelEase * 20).toFixed(1)}px ${(16 + peelEase * 16).toFixed(1)}px rgba(38, 30, 22, ${(0.24 + peelEase * 0.18).toFixed(2)}))`;
-            sheet.style.opacity = Math.max(0, 1 - Math.max(0, (localT - 0.48) / 0.52)).toFixed(2);
+            sheet.style.transform = `perspective(1000px) translate3d(${tx.toFixed(1)}px, ${ty.toFixed(1)}px, 0) rotateX(${rotX.toFixed(2)}deg) rotateY(${rotY.toFixed(2)}deg) rotateZ(${rotZ.toFixed(2)}deg) skewY(${skewY.toFixed(2)}deg) scale(${sc.toFixed(3)})`;
+            sheet.style.filter = `drop-shadow(${(-10 - peelEase * 18).toFixed(1)}px ${(14 + peelEase * 20).toFixed(1)}px ${(16 + peelEase * 16).toFixed(1)}px rgba(38, 30, 22, 0.34))`;
+            sheet.style.opacity = "1";
           }
         }
       }

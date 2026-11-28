@@ -1455,6 +1455,10 @@ textarea {
   opacity: 1;
 }
 
+.footer.is-ripping .footer-sheet {
+  z-index: 30;
+}
+
 .footer-sheet::before,
 .footer-sheet-under::before {
   content: "";
