@@ -502,36 +502,70 @@
     bar.classList.toggle("is-compact", fullyFolded);
   }
 
-  let footerObserved = false;
+  let footerStrokeCache = null;
 
-  function observeFooter() {
-    if (footerObserved) return;
-    const target = document.querySelector(".footer-giant");
-    if (!target) return;
+  function initFooterWriting() {
+    const svg = document.querySelector(".footer-write-svg");
+    if (!svg) return null;
 
-    footerObserved = true;
-    if (typeof IntersectionObserver === "undefined") {
-      target.classList.add("is-in");
+    if (!footerStrokeCache || !footerStrokeCache.svg.isConnected) {
+      const paths = Array.from(svg.querySelectorAll(".write-stroke"));
+      const nib = svg.querySelector(".footer-pen-nib");
+      if (paths.length === 0 || !nib) return null;
+
+      const items = paths.map((p) => {
+        const len = p.getTotalLength();
+        p.style.strokeDasharray = `${len}`;
+        return { path: p, len };
+      });
+      const totalLen = items.reduce((s, it) => s + it.len, 0);
+      footerStrokeCache = { svg, items, totalLen, nib };
+    }
+
+    return footerStrokeCache;
+  }
+
+  function updateFooterWriting() {
+    const cache = initFooterWriting();
+    if (!cache) return;
+
+    const { svg, items, totalLen, nib } = cache;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      for (const it of items) it.path.style.strokeDashoffset = "0";
       return;
     }
 
-    const io = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          if (entry.isIntersecting) {
-            target.classList.add("is-in");
-          } else {
-            target.classList.remove("is-in");
-          }
-        }
-      },
-      { threshold: 0.1 }
-    );
-    io.observe(target);
+    const rect = svg.getBoundingClientRect();
+    const vh = window.innerHeight || 800;
+    // Scrub 0 -> 1 as the footer SVG enters from bottom of viewport up into view
+    const startY = vh * 0.98;
+    const endY = vh * 0.62;
+    const raw = (startY - rect.top) / Math.max(80, startY - endY);
+    const progress = Math.min(1, Math.max(0, raw));
+
+    let remaining = progress * totalLen;
+    let tipPoint = items[0].path.getPointAtLength(0);
+
+    for (const it of items) {
+      if (remaining >= it.len) {
+        it.path.style.strokeDashoffset = "0";
+        tipPoint = it.path.getPointAtLength(it.len);
+        remaining -= it.len;
+      } else if (remaining > 0) {
+        it.path.style.strokeDashoffset = `${(it.len - remaining).toFixed(2)}`;
+        tipPoint = it.path.getPointAtLength(remaining);
+        remaining = 0;
+      } else {
+        it.path.style.strokeDashoffset = `${it.len.toFixed(2)}`;
+      }
+    }
+
+    // Tip of .footer-pen-nib is at local (12, 52)
+    nib.setAttribute("transform", `translate(${(tipPoint.x - 12).toFixed(1)} ${(tipPoint.y - 52).toFixed(1)})`);
   }
 
   function scheduleSync() {
-    observeFooter();
+    updateFooterWriting();
     syncHeaderState();
     if (rafPending) return;
     rafPending = true;
@@ -574,6 +608,7 @@
   function init() {
     syncHeaderState();
     syncDoodles();
+    updateFooterWriting();
     window.addEventListener("scroll", scheduleSync, { passive: true });
     window.addEventListener("resize", scheduleSync, { passive: true });
 

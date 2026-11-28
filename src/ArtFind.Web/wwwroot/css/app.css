@@ -1458,45 +1458,27 @@ textarea {
   position: relative;
   z-index: 1;
   width: 100%;
-  margin-top: 28px;
+  margin-top: 24px;
   display: flex;
   justify-content: center;
   pointer-events: none;
   user-select: none;
-  transform: translateY(30%);
-  opacity: 0;
-  transition:
-    opacity 850ms var(--ease-out),
-    transform 850ms var(--ease-out);
 }
 
-.footer-giant.is-in {
-  transform: translateY(0);
-  opacity: 1;
-}
-
-.footer-giant-row {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: clamp(14px, 3vw, 44px);
-  max-width: 1320px;
-  width: 100%;
-  margin-bottom: -0.22em;
-  color: oklch(0.2 0.018 55 / 0.16);
-}
-
-.footer-nib {
-  width: clamp(3.2rem, 12vw, 9.5rem);
+.footer-write-svg {
+  width: min(1160px, 100%);
   height: auto;
-  flex-shrink: 0;
+  margin-bottom: -1.5%;
+  color: oklch(0.2 0.018 55 / 0.24);
+  overflow: visible;
 }
 
-.footer-wordmark {
-  font-family: "Architects Daughter", cursive, sans-serif;
-  font-size: clamp(4rem, 18vw, 14.5rem);
-  line-height: 0.9;
-  letter-spacing: -0.02em;
+.write-stroke {
+  stroke-width: 7.5;
+}
+
+.footer-pen-nib {
+  color: var(--accent);
 }
 
 .footer-fade {
