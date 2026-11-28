@@ -1,10 +1,11 @@
 <article class="artist-card">
-    <div class="card-media"
-         @onclick="() => OnInspect.InvokeAsync(Match)"
-         @onkeydown="HandleMediaKeyDown"
-         role="button"
-         tabindex="0"
-         aria-label="Preview @Artist.DisplayName artwork">
+    <div class="card-paper">
+        <div class="card-media"
+             @onclick="() => OnInspect.InvokeAsync(Match)"
+             @onkeydown="HandleMediaKeyDown"
+             role="button"
+             tabindex="0"
+             aria-label="Preview @Artist.DisplayName artwork">
         @if (CurrentPreview is not null)
         {
             <img @key="CurrentPreview.ThumbnailUrl"
@@ -92,6 +93,7 @@
                 Inspect
             </button>
         </div>
+    </div>
     </div>
 </article>
 
