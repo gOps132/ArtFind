@@ -615,6 +615,80 @@
     return { advs, ePath, eX, eAdv };
   }
 
+  let sharedAudioCtx = null;
+
+  function unlockAudio() {
+    try {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtx) return;
+      if (!sharedAudioCtx) sharedAudioCtx = new AudioCtx();
+      if (sharedAudioCtx.state === "suspended") {
+        sharedAudioCtx.resume().catch(() => {});
+      }
+    } catch {
+      // Ignore audio errors when blocked
+    }
+  }
+
+  function playPaperRipSound() {
+    try {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtx) return;
+      if (!sharedAudioCtx) sharedAudioCtx = new AudioCtx();
+      if (sharedAudioCtx.state === "suspended") {
+        sharedAudioCtx.resume().catch(() => {});
+      }
+      const ctx = sharedAudioCtx;
+      if (ctx.state !== "running") return;
+
+      const duration = 0.62;
+      const sampleRate = ctx.sampleRate;
+      const length = Math.floor(sampleRate * duration);
+      const buffer = ctx.createBuffer(1, length, sampleRate);
+      const data = buffer.getChannelData(0);
+
+      // Synthesize crisp paper fiber-snap bursts modulated over a tear envelope
+      let env = 0;
+      for (let i = 0; i < length; i++) {
+        const t = i / length;
+        if (i % 160 === 0) {
+          env = 0.35 + Math.random() * 0.65;
+        } else {
+          env *= 0.992;
+        }
+        const tearCurve = Math.sin(Math.min(1, t * 1.15) * Math.PI) * (0.65 + 0.55 * t);
+        data[i] = (Math.random() * 2 - 1) * env * tearCurve;
+      }
+
+      const src = ctx.createBufferSource();
+      src.buffer = buffer;
+
+      const bandpass = ctx.createBiquadFilter();
+      bandpass.type = "bandpass";
+      bandpass.frequency.setValueAtTime(1750, ctx.currentTime);
+      bandpass.frequency.exponentialRampToValueAtTime(3400, ctx.currentTime + duration);
+      bandpass.Q.value = 1.05;
+
+      const highpass = ctx.createBiquadFilter();
+      highpass.type = "highpass";
+      highpass.frequency.value = 850;
+
+      const gain = ctx.createGain();
+      gain.gain.setValueAtTime(0.01, ctx.currentTime);
+      gain.gain.linearRampToValueAtTime(0.28, ctx.currentTime + 0.025);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+
+      src.connect(bandpass);
+      bandpass.connect(highpass);
+      highpass.connect(gain);
+      gain.connect(ctx.destination);
+
+      src.start();
+    } catch {
+      // Ignore audio errors
+    }
+  }
+
   function resetFooterPaths(cache) {
     const footer = cache.svg.closest(".footer");
     const sheet = cache.svg.closest(".footer-sheet");
@@ -622,6 +696,8 @@
     if (sheet) {
       sheet.style.transform = "";
       sheet.style.opacity = "";
+      sheet.style.clipPath = "";
+      sheet.style.filter = "";
     }
     for (const it of cache.mainItems) {
       it.path.style.strokeDashoffset = `${it.len.toFixed(2)}`;
@@ -848,15 +924,32 @@
       } else if (step.kind === "rip") {
         if (elapsedMs < step.endMs) {
           isRipping = true;
+          if (!step.soundPlayed) {
+            step.soundPlayed = true;
+            playPaperRipSound();
+          }
           const localT = (elapsedMs - step.startMs) / (step.endMs - step.startMs);
-          const eased = localT * localT;
           if (footer) footer.classList.add("is-ripping");
           if (sheet) {
-            const tx = eased * 44;
-            const ty = eased * 240;
-            const rot = -eased * 13;
-            sheet.style.transform = `translate3d(${tx.toFixed(1)}px, ${ty.toFixed(1)}px, 0) rotate(${rot.toFixed(2)}deg)`;
-            sheet.style.opacity = Math.max(0, 1 - Math.max(0, (localT - 0.35) / 0.65)).toFixed(2);
+            // Phase 1 (0..0.44): jagged tear progresses left-to-right; Phase 2 (0.44..1): 3D peel & drop
+            const tearPct = Math.min(1, localT / 0.44) * 100;
+            const peelT = Math.max(0, (localT - 0.32) / 0.68);
+            const peelEase = peelT * peelT;
+
+            const tx = peelEase * 52;
+            const ty = localT * 18 + peelEase * 230;
+            const rotZ = -localT * 4 - peelEase * 13;
+            const rotX = -peelEase * 22;
+            const rotY = peelEase * 12;
+            const sc = 1 - peelEase * 0.08;
+
+            sheet.style.clipPath =
+              tearPct < 99.5
+                ? `polygon(0% 10%, ${tearPct.toFixed(1)}% 0%, ${(tearPct * 0.6 + 40).toFixed(1)}% 3%, 100% 0%, 100% 100%, 0% 100%)`
+                : "";
+            sheet.style.transform = `perspective(1200px) translate3d(${tx.toFixed(1)}px, ${ty.toFixed(1)}px, 0) rotateX(${rotX.toFixed(2)}deg) rotateY(${rotY.toFixed(2)}deg) rotateZ(${rotZ.toFixed(2)}deg) scale(${sc.toFixed(3)})`;
+            sheet.style.filter = `drop-shadow(0 ${(10 + peelEase * 18).toFixed(1)}px ${(14 + peelEase * 14).toFixed(1)}px rgba(38, 30, 22, ${(0.22 + peelEase * 0.16).toFixed(2)}))`;
+            sheet.style.opacity = Math.max(0, 1 - Math.max(0, (localT - 0.45) / 0.55)).toFixed(2);
           }
         }
       }
@@ -867,6 +960,8 @@
       if (sheet) {
         sheet.style.transform = "";
         sheet.style.opacity = "";
+        sheet.style.clipPath = "";
+        sheet.style.filter = "";
       }
     }
 
@@ -1002,6 +1097,10 @@
     updateFooterWriting();
     window.addEventListener("scroll", scheduleSync, { passive: true });
     window.addEventListener("resize", scheduleSync, { passive: true });
+    window.addEventListener("pointerdown", unlockAudio, { passive: true, once: true });
+    window.addEventListener("wheel", unlockAudio, { passive: true, once: true });
+    window.addEventListener("touchstart", unlockAudio, { passive: true, once: true });
+    window.addEventListener("keydown", unlockAudio, { passive: true, once: true });
 
     if (typeof ResizeObserver !== "undefined") {
       const ro = new ResizeObserver(scheduleSync);
