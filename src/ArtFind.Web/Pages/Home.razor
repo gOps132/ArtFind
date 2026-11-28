@@ -82,10 +82,13 @@
             <span>18+</span>
         </label>
     </div>
+    </div>
 
-        @if (_showTagBrowser)
-        {
-            <div class="tag-browser-wrap">
+    @if (_showTagBrowser)
+    {
+        <div class="tag-browser-wrap">
+            <div class="tag-browser-flap">
+                <div class="bar-tags-paper" aria-hidden="true"></div>
                 <div class="tag-browser-clip">
                     <div class="tag-browser" aria-label="Search all tags">
                     <div class="tag-browser-header">
@@ -139,8 +142,8 @@
                     </div>
                 </div>
             </div>
-        }
-    </div>
+        </div>
+    }
 
     <div class="bar-landing" aria-label="About ArtFind">
         <div class="bar-landing-flap">

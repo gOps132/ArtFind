@@ -209,8 +209,9 @@ textarea {
     inset 0 -7px 8px -5px oklch(0.2 0.018 55 / calc(var(--fold, 0) * 0.25));
 }
 
-/* Fixed, non-scaling crumpled paper texture on top sheet */
+/* Fixed, non-scaling crumpled paper texture shared across all 3 sheets */
 .bar-paper-clip,
+.bar-tags-paper,
 .bar-landing-paper {
   position: absolute;
   inset: 0;
@@ -220,6 +221,7 @@ textarea {
 }
 
 .bar-paper-clip::before,
+.bar-tags-paper::before,
 .bar-landing-paper::before {
   content: "";
   position: absolute;
@@ -234,13 +236,13 @@ textarea {
   background-repeat: no-repeat, repeat;
 }
 
+.bar-tags-paper::before,
 .bar-landing-paper::before {
   top: -108px;
 }
 
 .bar-in,
-.filters,
-.tag-browser-wrap {
+.filters {
   position: relative;
   z-index: 1;
 }
@@ -556,17 +558,33 @@ textarea {
   margin-left: 4px;
 }
 
-/* Fold 1: Tag search section folds first on scroll (full-width paper band + inner box) */
+/* Fold 1: Full-width crumpled paper flap for Tag Search (folds in 3D as one sheet) */
 .tag-browser-wrap {
   position: relative;
+  z-index: 2;
   perspective: 1200px;
   overflow: hidden;
   width: 100%;
   max-height: calc((1 - var(--fold-tags, 0)) * 420px);
-  padding: 0 0 calc((1 - var(--fold-tags, 0)) * 14px);
 }
 
-.tag-browser-wrap::after {
+.bar.is-compact .tag-browser-wrap {
+  pointer-events: none;
+}
+
+.tag-browser-flap {
+  position: relative;
+  width: 100%;
+  background-color: oklch(0.925 0.02 83);
+  padding: 2px 0 14px;
+  transform-origin: top center;
+  transform-style: preserve-3d;
+  transform: rotateX(calc(var(--fold-tags, 0) * -86deg));
+  backface-visibility: hidden;
+  will-change: transform;
+}
+
+.tag-browser-flap::after {
   content: "";
   position: absolute;
   inset: 0;
@@ -581,24 +599,17 @@ textarea {
   opacity: var(--fold-tags, 0);
 }
 
-.bar.is-compact .tag-browser-wrap {
-  pointer-events: none;
-}
-
 .tag-browser-clip {
   position: relative;
+  z-index: 1;
   max-width: 1280px;
   margin: 0 auto;
   padding: 0 max(24px, env(safe-area-inset-right)) 0 max(24px, env(safe-area-inset-left));
-  transform-origin: top center;
-  transform: rotateX(calc(var(--fold-tags, 0) * -86deg));
-  backface-visibility: hidden;
-  will-change: transform;
 }
 
 @media (prefers-reduced-motion: reduce) {
   .bar-landing-flap,
-  .tag-browser-clip {
+  .tag-browser-flap {
     transform: none;
   }
   .bar.is-compact .bar-landing,
