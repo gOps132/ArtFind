@@ -68,6 +68,8 @@ public sealed class SourceAdapterRegistry
                         Previews = combinedPreviews,
                         SourceProfiles = combinedProfiles,
                         PriceRange = existing.PriceRange ?? artist.PriceRange,
+                        ContentRating = existing.ContentRating == ContentRating.Nsfw || artist.ContentRating == ContentRating.Nsfw
+                            ? ContentRating.Nsfw : ContentRating.Sfw,
                         LastVerifiedAt = existing.LastVerifiedAt >= artist.LastVerifiedAt
                             ? existing.LastVerifiedAt
                             : artist.LastVerifiedAt
