@@ -114,13 +114,21 @@
                     </button>
                 </div>
 
-                @if (artist.PrimarySource is not null)
+                @if (artist.PrimarySource is { } source)
                 {
+                    var hasPost = !string.IsNullOrWhiteSpace(source.SourcePostUrl);
+                    var action = hasPost ? "View Original Post" : "View Source Profile";
+                    var platformSuffix = source.Platform.ToLowerInvariant() switch
+                    {
+                        "bluesky" => " on Bluesky",
+                        "mastodon" => " on Mastodon",
+                        _ => string.Empty
+                    };
                     <a class="btn btn-ghost"
-                       href="@(artist.PrimarySource.SourcePostUrl ?? artist.PrimarySource.ProfileUrl)"
+                       href="@(hasPost ? source.SourcePostUrl : source.ProfileUrl)"
                        target="_blank"
                        rel="noopener noreferrer">
-                        <span>View Original Post on Bluesky</span>
+                        <span>@(action + platformSuffix)</span>
                         <span aria-hidden="true">↗</span>
                     </a>
                 }
