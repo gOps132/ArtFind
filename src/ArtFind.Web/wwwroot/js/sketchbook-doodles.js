@@ -464,7 +464,10 @@
     if (!bar) return;
 
     const y = window.scrollY || 0;
-    if (y > 48) {
+    const fold = Math.min(1, Math.max(0, y / 110));
+    bar.style.setProperty("--fold", fold.toFixed(3));
+
+    if (y > 95) {
       bar.classList.add("is-compact");
     } else if (y < 16) {
       bar.classList.remove("is-compact");
