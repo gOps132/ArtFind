@@ -3,8 +3,9 @@
 @inject CommissionMatcher Matcher
 
 <header class="bar">
-    <div class="bar-paper-clip" aria-hidden="true"></div>
-    <div class="bar-in">
+    <div class="bar-top-sheet">
+        <div class="bar-paper-clip" aria-hidden="true"></div>
+        <div class="bar-in">
         <a href="/" class="brand" @onclick="ResetFilters" @onclick:preventDefault="true">ArtFind</a>
 
         <nav class="navrow" aria-label="Categories">
@@ -139,8 +140,11 @@
                 </div>
             </div>
         }
+    </div>
 
-        <div class="bar-landing" aria-label="About ArtFind">
+    <div class="bar-landing" aria-label="About ArtFind">
+        <div class="bar-landing-flap">
+            <div class="bar-landing-paper" aria-hidden="true"></div>
             <div class="bar-landing-inner">
                 <div class="hero">
                     <h1 class="hero-title">
@@ -158,7 +162,8 @@
                 </div>
             </div>
         </div>
-    </header>
+    </div>
+</header>
 
     <main class="container">
 
