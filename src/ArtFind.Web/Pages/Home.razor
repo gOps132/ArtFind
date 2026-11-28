@@ -84,78 +84,103 @@
         </label>
     </div>
 
-    @if (_showTagBrowser)
-    {
-        <div class="tag-browser-wrap">
-            <div class="tag-browser" aria-label="Search all tags">
-                <div class="tag-browser-header">
-                    <input class="tag-search-input"
-                           type="search"
-                           placeholder="Filter all tags..."
-                           @bind="_tagSearch"
-                           @bind:event="oninput" />
-                    @if (!string.IsNullOrWhiteSpace(_tagSearch))
+        @if (_showTagBrowser)
+        {
+            <div class="tag-browser-wrap">
+                <div class="tag-browser" aria-label="Search all tags">
+                    <div class="tag-browser-header">
+                        <input class="tag-search-input"
+                               type="search"
+                               placeholder="Filter all tags..."
+                               @bind="_tagSearch"
+                               @bind:event="oninput" />
+                        @if (!string.IsNullOrWhiteSpace(_tagSearch))
+                        {
+                            <button type="button" class="btn btn-subtle" @onclick="() => _tagSearch = string.Empty">Clear</button>
+                        }
+                    </div>
+
+                    @if (FilteredStyles.Count > 0)
                     {
-                        <button type="button" class="btn btn-subtle" @onclick="() => _tagSearch = string.Empty">Clear</button>
+                        <div class="tag-group-label">Styles (@FilteredStyles.Count)</div>
+                        <div class="tag-wrap">
+                            @foreach (var item in FilteredStyles)
+                            {
+                                var isActive = _selectedStyles.Contains(item.Tag);
+                                <button type="button"
+                                        class="chip @(isActive ? "on" : "")"
+                                        @onclick="() => ToggleStyle(item.Tag)">
+                                    @FormatTag(item.Tag)<span class="n">@item.Count</span>
+                                </button>
+                            }
+                        </div>
+                    }
+
+                    @if (FilteredCategories.Count > 0)
+                    {
+                        <div class="tag-group-label">Categories (@FilteredCategories.Count)</div>
+                        <div class="tag-wrap">
+                            @foreach (var item in FilteredCategories)
+                            {
+                                var isActive = _selectedCategory.Equals(item.Tag, StringComparison.OrdinalIgnoreCase);
+                                <button type="button"
+                                        class="chip @(isActive ? "on" : "")"
+                                        @onclick="() => ToggleCategory(item.Tag)">
+                                    @FormatTag(item.Tag)<span class="n">@item.Count</span>
+                                </button>
+                            }
+                        </div>
+                    }
+
+                    @if (FilteredStyles.Count == 0 && FilteredCategories.Count == 0)
+                    {
+                        <p class="tag-empty">No tags match "@_tagSearch".</p>
                     }
                 </div>
+            </div>
+        }
 
-                @if (FilteredStyles.Count > 0)
-                {
-                    <div class="tag-group-label">Styles (@FilteredStyles.Count)</div>
-                    <div class="tag-wrap">
-                        @foreach (var item in FilteredStyles)
-                        {
-                            var isActive = _selectedStyles.Contains(item.Tag);
-                            <button type="button"
-                                    class="chip @(isActive ? "on" : "")"
-                                    @onclick="() => ToggleStyle(item.Tag)">
-                                @FormatTag(item.Tag)<span class="n">@item.Count</span>
-                            </button>
-                        }
+        <div class="bar-landing" aria-label="About ArtFind">
+            <div class="bar-landing-inner">
+                <div class="bar-landing-grid">
+                    <div class="hero">
+                        <h1 class="hero-title">
+                            Find an illustrator
+                            <span class="hero-highlight">
+                                open for work
+                                <svg class="hero-squiggle" viewBox="0 0 240 16" fill="none" preserveAspectRatio="none" aria-hidden="true">
+                                    <path d="M3 10.5C38 4.5 72 13.5 112 7.5C152 1.5 196 12.5 237 6" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" />
+                                </svg>
+                            </span>
+                        </h1>
+                        <p class="hero-subtitle">
+                            Browse public illustrators and digital artists currently accepting commissions. Filter by brief, style, or budget, then jump straight to their Artist Page.
+                        </p>
                     </div>
-                }
 
-                @if (FilteredCategories.Count > 0)
-                {
-                    <div class="tag-group-label">Categories (@FilteredCategories.Count)</div>
-                    <div class="tag-wrap">
-                        @foreach (var item in FilteredCategories)
-                        {
-                            var isActive = _selectedCategory.Equals(item.Tag, StringComparison.OrdinalIgnoreCase);
-                            <button type="button"
-                                    class="chip @(isActive ? "on" : "")"
-                                    @onclick="() => ToggleCategory(item.Tag)">
-                                @FormatTag(item.Tag)<span class="n">@item.Count</span>
-                            </button>
-                        }
+                    <div class="landing-notes">
+                        <div class="landing-note">
+                            <span class="note-kicker mono">01 · DIRECT</span>
+                            <span>Links straight to VGen, Carrd, Ko-fi, Artistree, or Bluesky with zero fees.</span>
+                        </div>
+                        <div class="landing-note">
+                            <span class="note-kicker mono">02 · VERIFIED</span>
+                            <span>Indexed from public <code>#commissionsopen</code> posts and artist bios.</span>
+                        </div>
+                        <div class="landing-note">
+                            <span class="note-kicker mono">03 · RESPECTFUL</span>
+                            <span>No full-res re-hosting. Artists can opt out anytime with <code>#noartfind</code>.</span>
+                        </div>
                     </div>
-                }
-
-                @if (FilteredStyles.Count == 0 && FilteredCategories.Count == 0)
-                {
-                    <p class="tag-empty">No tags match "@_tagSearch".</p>
-                }
+                </div>
+                <div class="landing-scroll-cue mono" aria-hidden="true">
+                    ↓ Scroll down to browse the gallery
+                </div>
             </div>
         </div>
-    }
-</header>
+    </header>
 
-<main class="container">
-    <section class="hero">
-        <h1 class="hero-title">
-            Find an illustrator
-            <span class="hero-highlight">
-                open for work
-                <svg class="hero-squiggle" viewBox="0 0 240 16" fill="none" preserveAspectRatio="none" aria-hidden="true">
-                    <path d="M3 10.5C38 4.5 72 13.5 112 7.5C152 1.5 196 12.5 237 6" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" />
-                </svg>
-            </span>
-        </h1>
-        <p class="hero-subtitle">
-            Browse by category or style, then go directly to the Artist Page.
-        </p>
-    </section>
+    <main class="container">
 
     @if (!_loading && _loadError is null)
     {
