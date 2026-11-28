@@ -1540,6 +1540,28 @@ textarea {
   stroke-width: 3.6;
 }
 
+.footer-write-svg.is-crayon .footer-write-paths,
+.footer-write-svg.is-crayon .footer-typo-paths {
+  filter: url(#crayon-grain);
+}
+
+.footer-write-svg.is-crayon .write-stroke {
+  stroke-width: 6.5;
+}
+
+.footer-write-svg.is-brush .footer-write-paths,
+.footer-write-svg.is-brush .footer-typo-paths {
+  filter: url(#brush-soft);
+}
+
+.footer-write-svg.is-brush .write-stroke {
+  stroke-width: 7.5;
+}
+
+.footer-write-svg.is-pencil .write-stroke {
+  stroke-width: 3.1;
+}
+
 .footer-pen-nib,
 .footer-eraser {
   color: var(--accent);

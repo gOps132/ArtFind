@@ -508,10 +508,21 @@
   let footerAtBottom = false;
   let footerTimeline = null;
   let lastScenarioKey = null;
+  let lastStyleKey = null;
 
-  const E_GLYPH_PATH = "M 31.582031 115.429688 Q 43.613281 115.429688 67.812500 104.492188 Q 69.316406 104.492188 70.273438 105.517578 Q 71.230469 106.542969 71.230469 107.910156 Q 65.761719 117.207031 50.312500 122.402344 Q 34.863281 127.597656 21.464844 124.179688 Q 6.289062 120.214844 3.007812 107.089844 Q 2.734375 104.492188 2.734375 100.117188 Q 2.734375 95.742188 4.990234 88.564453 Q 7.246094 81.386719 12.714844 74.960938 Q 18.183594 68.535156 25.566406 64.843750 Q 32.949219 61.152344 41.289062 61.152344 Q 49.218750 61.152344 59.062500 66.621094 Q 63.710938 69.218750 66.445312 72.500000 Q 69.179688 75.781250 69.179688 79.199219 Q 69.179688 80.156250 69.042969 81.113281 Q 68.769531 89.453125 60.976562 91.640625 Q 57.558594 92.597656 53.046875 92.597656 L 33.359375 91.777344 Q 23.515625 91.777344 18.320312 96.015625 Q 15.312500 98.339844 14.082031 102.988281 Q 17.500000 115.429688 31.582031 115.429688 Z M 28.300781 73.730469 Q 18.867188 78.105469 18.867188 82.890625 Q 29.804688 83.847656 35.273438 83.847656 Q 50.449219 83.847656 55.781250 81.250000 Q 59.062500 79.882812 59.062500 77.832031 Q 59.062500 75.371094 55.986328 73.183594 Q 52.910156 70.996094 49.628906 70.039062 Q 46.347656 69.082031 44.160156 69.082031 Q 41.972656 69.082031 37.050781 70.517578 Q 32.128906 71.953125 28.300781 73.730469 Z";
+  const SKETCH_E_PATH = "M 31.582031 115.429688 Q 43.613281 115.429688 67.812500 104.492188 Q 69.316406 104.492188 70.273438 105.517578 Q 71.230469 106.542969 71.230469 107.910156 Q 65.761719 117.207031 50.312500 122.402344 Q 34.863281 127.597656 21.464844 124.179688 Q 6.289062 120.214844 3.007812 107.089844 Q 2.734375 104.492188 2.734375 100.117188 Q 2.734375 95.742188 4.990234 88.564453 Q 7.246094 81.386719 12.714844 74.960938 Q 18.183594 68.535156 25.566406 64.843750 Q 32.949219 61.152344 41.289062 61.152344 Q 49.218750 61.152344 59.062500 66.621094 Q 63.710938 69.218750 66.445312 72.500000 Q 69.179688 75.781250 69.1796875 79.199219 Q 69.179688 80.156250 69.042969 81.113281 Q 68.769531 89.453125 60.976562 91.640625 Q 57.558594 92.597656 53.046875 92.597656 L 33.359375 91.777344 Q 23.515625 91.777344 18.320312 96.015625 Q 15.312500 98.339844 14.082031 102.988281 Q 17.500000 115.429688 31.582031 115.429688 Z M 28.300781 73.730469 Q 18.867188 78.105469 18.867188 82.890625 Q 29.804688 83.847656 35.273438 83.847656 Q 50.449219 83.847656 55.781250 81.250000 Q 59.062500 79.882812 59.062500 77.832031 Q 59.062500 75.371094 55.986328 73.183594 Q 52.910156 70.996094 49.628906 70.039062 Q 46.347656 69.082031 44.160156 69.082031 Q 41.972656 69.082031 37.050781 70.517578 Q 32.128906 71.953125 28.300781 73.730469 Z";
+  const SKETCH_ADVS = [89.6875, 77.2461, 56.6016, 96.9336, 21.1914, 70.0, 71.7773];
   const STAR_PATH = "M 492 18 L 496 29 L 507 30 L 498 37 L 501 48 L 492 41 L 483 48 L 486 37 L 477 30 L 488 29 Z";
   const SWOOSH_PATH = "M 10 138 Q 160 128 310 137 T 482 132";
+
+  const FOOTER_STYLES = [
+    { key: "fountain-sketch", font: "sketch", tool: "fountain", color: "oklch(0.2 0.018 55 / 0.36)", maxFill: 1.0, speed: 1.0 },
+    { key: "fountain-cursive", font: "cursive", tool: "fountain", color: "oklch(0.32 0.12 268 / 0.42)", maxFill: 1.0, speed: 0.9 },
+    { key: "crayon-coral", font: "marker", tool: "crayon", color: "oklch(0.56 0.18 28 / 0.48)", maxFill: 0.88, speed: 0.85 },
+    { key: "crayon-cobalt", font: "cursive", tool: "crayon", color: "oklch(0.46 0.16 258 / 0.46)", maxFill: 0.88, speed: 0.9 },
+    { key: "brush-sage", font: "cursive", tool: "brush", color: "oklch(0.45 0.12 162 / 0.45)", maxFill: 0.92, speed: 0.92 },
+    { key: "pencil-sketch", font: "sketch", tool: "pencil", color: "oklch(0.28 0.012 60 / 0.38)", maxFill: 0.48, speed: 1.05 }
+  ];
 
   function easeInOutSine(t) {
     return 0.5 - 0.5 * Math.cos(Math.PI * t);
@@ -557,11 +568,51 @@
       const eraser = svg.querySelector(".footer-eraser");
       if (mainPaths.length < 7 || !typoGroup || !flourishGroup || !nib || !eraser) return null;
 
+      const sketchPaths = mainPaths.map((p) => p.getAttribute("d"));
       const mainItems = mainPaths.map((p) => createStrokeItem(p, 0));
-      footerStrokeCache = { svg, mainItems, typoGroup, flourishGroup, nib, eraser };
+      footerStrokeCache = {
+        svg,
+        mainPaths,
+        sketchPaths,
+        mainItems,
+        typoGroup,
+        flourishGroup,
+        nib,
+        eraser,
+        maxFill: 1.0
+      };
     }
 
     return footerStrokeCache;
+  }
+
+  function applyFooterStyle(cache, style) {
+    const extraFonts = window.ARTFIND_FOOTER_FONTS || {};
+    const usePreset = style.font !== "sketch" && extraFonts[style.font];
+    const paths = usePreset ? usePreset.paths : cache.sketchPaths;
+    const advs = usePreset ? usePreset.advs : SKETCH_ADVS;
+    const ePath = usePreset ? usePreset.ePath : SKETCH_E_PATH;
+    const eX = usePreset
+      ? usePreset.startX + advs[0] + advs[1] + advs[2] + advs[3] + advs[4] + advs[5]
+      : 411.6602;
+    const eAdv = usePreset ? usePreset.eAdv : 75.7422;
+
+    for (let idx = 0; idx < 7; idx++) {
+      cache.mainPaths[idx].setAttribute("d", paths[idx]);
+    }
+    cache.mainItems = cache.mainPaths.map((p) => createStrokeItem(p, 0));
+    cache.maxFill = style.maxFill;
+
+    cache.svg.classList.remove("is-fountain", "is-crayon", "is-brush", "is-pencil");
+    cache.svg.classList.add(`is-${style.tool}`);
+    cache.svg.style.color = style.color;
+
+    for (const tName of ["fountain", "crayon", "brush", "pencil"]) {
+      const g = cache.nib.querySelector(`.tool-${tName}`);
+      if (g) g.setAttribute("opacity", tName === style.tool ? "1" : "0");
+    }
+
+    return { advs, ePath, eX, eAdv };
   }
 
   function resetFooterPaths(cache) {
@@ -579,8 +630,18 @@
   }
 
   function buildFooterScenario(cache) {
+    const extraFonts = window.ARTFIND_FOOTER_FONTS || {};
+    const availableStyles = FOOTER_STYLES.filter(
+      (s) => s.font === "sketch" || Boolean(extraFonts[s.font])
+    );
+    const stylePool = availableStyles.filter((s) => s.key !== lastStyleKey);
+    const style = stylePool[Math.floor(Math.random() * stylePool.length)] || availableStyles[0];
+    lastStyleKey = style.key;
+
+    const metrics = applyFooterStyle(cache, style);
     resetFooterPaths(cache);
     const [A, r, t, F, i, n, d] = cache.mainItems;
+    const { advs, ePath, eX, eAdv } = metrics;
 
     const scenarios = ["artFnd", "artFined", "atrFind", "flourish"];
     const pool = scenarios.filter((k) => k !== lastScenarioKey);
@@ -602,7 +663,7 @@
 
     function pushDraw(item, speed = 1) {
       pushMove(item.startPt);
-      const dur = Math.max(150, Math.round(item.len * 1.1 * speed));
+      const dur = Math.max(140, Math.round(item.len * 1.05 * speed * style.speed));
       steps.push({ kind: "draw", item, startMs: cursor, endMs: cursor + dur });
       cursor += dur;
       lastPt = item.endPt;
@@ -621,31 +682,27 @@
     }
 
     if (key === "artFnd") {
-      // Misspells "ArtFnd" -> pauses -> erases "nd" -> writes "ind"
-      const nTypo = appendExtraPath(cache.typoGroup, n.path.getAttribute("d"), -21.1914);
-      const dTypo = appendExtraPath(cache.typoGroup, d.path.getAttribute("d"), -21.1914);
+      const nTypo = appendExtraPath(cache.typoGroup, n.path.getAttribute("d"), -advs[4]);
+      const dTypo = appendExtraPath(cache.typoGroup, d.path.getAttribute("d"), -advs[4]);
       [A, r, t, F, nTypo, dTypo].forEach((it) => pushDraw(it));
       pushPause(380);
       pushErase([nTypo, dTypo], 700);
       [i, n, d].forEach((it) => pushDraw(it, 0.92));
     } else if (key === "artFined") {
-      // Misspells "ArtFined" -> pauses -> erases "ed" -> writes "d"
-      const eTypo = appendExtraPath(cache.typoGroup, E_GLYPH_PATH, 411.6602);
-      const dTypo = appendExtraPath(cache.typoGroup, d.path.getAttribute("d"), 75.7422);
+      const eTypo = appendExtraPath(cache.typoGroup, ePath, eX);
+      const dTypo = appendExtraPath(cache.typoGroup, d.path.getAttribute("d"), eAdv);
       [A, r, t, F, i, n, eTypo, dTypo].forEach((it) => pushDraw(it));
       pushPause(380);
       pushErase([eTypo, dTypo], 720);
       pushDraw(d, 0.92);
     } else if (key === "atrFind") {
-      // Misspells "Atr" -> pauses -> erases "tr" -> writes "rtFind"
-      const tTypo = appendExtraPath(cache.typoGroup, t.path.getAttribute("d"), -77.2461);
-      const rTypo = appendExtraPath(cache.typoGroup, r.path.getAttribute("d"), 56.6016);
+      const tTypo = appendExtraPath(cache.typoGroup, t.path.getAttribute("d"), -advs[1]);
+      const rTypo = appendExtraPath(cache.typoGroup, r.path.getAttribute("d"), advs[2]);
       [A, tTypo, rTypo].forEach((it) => pushDraw(it));
       pushPause(340);
       pushErase([tTypo, rTypo], 640);
       [r, t, F, i, n, d].forEach((it) => pushDraw(it, 0.95));
     } else {
-      // Writes "ArtFind" cleanly, then adds a sparkle star and underline swoosh
       const star = appendExtraPath(cache.flourishGroup, STAR_PATH, 0);
       const swoosh = appendExtraPath(cache.flourishGroup, SWOOSH_PATH, 0);
       [A, r, t, F, i, n, d].forEach((it) => pushDraw(it));
@@ -661,6 +718,7 @@
     let tipPoint = cache.mainItems[0].startPt;
     let usingEraser = false;
     let eraserPoint = tipPoint;
+    const maxFill = cache.maxFill ?? 1.0;
 
     for (const step of timeline.steps) {
       if (elapsedMs < step.startMs) break;
@@ -668,14 +726,14 @@
       if (step.kind === "draw") {
         if (elapsedMs >= step.endMs) {
           step.item.path.style.strokeDashoffset = "0";
-          step.item.path.style.fillOpacity = "1";
+          step.item.path.style.fillOpacity = maxFill.toFixed(2);
           tipPoint = step.item.endPt;
         } else {
           const localT = (elapsedMs - step.startMs) / (step.endMs - step.startMs);
           const eased = easeInOutCubic(localT);
           const drawn = eased * step.item.len;
           step.item.path.style.strokeDashoffset = `${(step.item.len - drawn).toFixed(2)}`;
-          const fillT = Math.min(1, Math.max(0, (localT - 0.65) / 0.35));
+          const fillT = Math.min(1, Math.max(0, (localT - 0.65) / 0.35)) * maxFill;
           step.item.path.style.fillOpacity = fillT.toFixed(2);
           const pt = step.item.path.getPointAtLength(drawn);
           tipPoint = { x: pt.x + step.item.dx, y: pt.y };
@@ -725,7 +783,7 @@
             } else if (idx === seg) {
               const remain = (1 - easeInOutSine(segT)) * tgt.len;
               tgt.path.style.strokeDashoffset = `${(tgt.len - remain).toFixed(2)}`;
-              tgt.path.style.fillOpacity = Math.max(0, 1 - segT * 2.5).toFixed(2);
+              tgt.path.style.fillOpacity = (Math.max(0, 1 - segT * 2.5) * maxFill).toFixed(2);
               const pt = tgt.path.getPointAtLength(remain);
               const scrubX = Math.sin(localT * Math.PI * 10) * 12;
               const scrubY = Math.cos(localT * Math.PI * 10) * 4;
