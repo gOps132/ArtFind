@@ -651,33 +651,44 @@
   function ensureToolAudio(ctx) {
     if (activeToolAudio && activeToolAudio.ctx === ctx) return activeToolAudio;
 
-    const length = Math.floor(ctx.sampleRate * 1.6);
+    // Warm pink-tinted noise (zero periodic buzz, soft paper-glide texture)
+    const length = Math.floor(ctx.sampleRate * 2.0);
     const buffer = ctx.createBuffer(1, length, ctx.sampleRate);
     const data = buffer.getChannelData(0);
-    let grain = 0.5;
+    let b0 = 0;
+    let b1 = 0;
+    let b2 = 0;
     for (let i = 0; i < length; i++) {
-      if (i % 90 === 0) grain = 0.4 + Math.random() * 0.6;
-      data[i] = (Math.random() * 2 - 1) * grain;
+      const white = Math.random() * 2 - 1;
+      b0 = 0.997 * b0 + white * 0.029;
+      b1 = 0.985 * b1 + white * 0.032;
+      b2 = 0.950 * b2 + white * 0.048;
+      data[i] = Math.max(-1, Math.min(1, (b0 + b1 + b2 + white * 0.08) * 1.6));
     }
 
     const src = ctx.createBufferSource();
     src.buffer = buffer;
     src.loop = true;
 
-    const filter = ctx.createBiquadFilter();
-    filter.type = "bandpass";
-    filter.frequency.value = 1800;
-    filter.Q.value = 1.4;
+    const bandpass = ctx.createBiquadFilter();
+    bandpass.type = "bandpass";
+    bandpass.frequency.value = 1200;
+    bandpass.Q.value = 0.85;
+
+    const lowpass = ctx.createBiquadFilter();
+    lowpass.type = "lowpass";
+    lowpass.frequency.value = 2400;
 
     const gain = ctx.createGain();
     gain.gain.value = 0.0001;
 
-    src.connect(filter);
-    filter.connect(gain);
+    src.connect(bandpass);
+    bandpass.connect(lowpass);
+    lowpass.connect(gain);
     gain.connect(ctx.destination);
     src.start();
 
-    activeToolAudio = { ctx, src, filter, gain };
+    activeToolAudio = { ctx, src, filter: bandpass, lowpass, gain };
     return activeToolAudio;
   }
 
@@ -689,40 +700,46 @@
       const now = ctx.currentTime;
 
       if (mode === "idle") {
-        audio.gain.gain.setTargetAtTime(0.0001, now, 0.02);
+        audio.gain.gain.setTargetAtTime(0.0001, now, 0.045);
         return;
       }
 
       if (mode === "erase") {
-        audio.filter.type = "bandpass";
-        audio.filter.frequency.setTargetAtTime(980, now, 0.02);
-        audio.filter.Q.setTargetAtTime(1.3, now, 0.02);
-        audio.gain.gain.setTargetAtTime(Math.max(0.01, 0.13 * intensity), now, 0.015);
+        const scrubFreq = 580 + 260 * intensity;
+        audio.filter.frequency.setTargetAtTime(scrubFreq, now, 0.035);
+        audio.filter.Q.setTargetAtTime(0.8, now, 0.04);
+        audio.lowpass.frequency.setTargetAtTime(1500, now, 0.04);
+        audio.gain.gain.setTargetAtTime(Math.max(0.005, 0.065 * intensity), now, 0.03);
         return;
       }
 
-      // Unique acoustic profile per writing tool
-      let freq = 3200;
-      let q = 2.2;
-      let baseGain = 0.055;
+      // Smooth paper-glide acoustic profiles per writing tool
+      let freq = 1950;
+      let lpFreq = 3000;
+      let q = 0.95;
+      let baseGain = 0.036;
       if (tool === "pencil") {
-        freq = 2100;
-        q = 1.6;
-        baseGain = 0.08;
-      } else if (tool === "crayon") {
-        freq = 740;
-        q = 1.05;
-        baseGain = 0.095;
-      } else if (tool === "brush") {
-        freq = 1280;
+        freq = 1350;
+        lpFreq = 2300;
         q = 0.85;
-        baseGain = 0.06;
+        baseGain = 0.048;
+      } else if (tool === "crayon") {
+        freq = 540;
+        lpFreq = 1350;
+        q = 0.75;
+        baseGain = 0.058;
+      } else if (tool === "brush") {
+        freq = 920;
+        lpFreq = 1750;
+        q = 0.65;
+        baseGain = 0.042;
       }
 
-      audio.filter.type = "bandpass";
-      audio.filter.frequency.setTargetAtTime(freq, now, 0.02);
-      audio.filter.Q.setTargetAtTime(q, now, 0.02);
-      audio.gain.gain.setTargetAtTime(Math.max(0.005, baseGain * intensity), now, 0.018);
+      const glideFreq = freq * (0.86 + 0.28 * intensity);
+      audio.filter.frequency.setTargetAtTime(glideFreq, now, 0.055);
+      audio.filter.Q.setTargetAtTime(q, now, 0.05);
+      audio.lowpass.frequency.setTargetAtTime(lpFreq, now, 0.05);
+      audio.gain.gain.setTargetAtTime(Math.max(0.004, baseGain * intensity), now, 0.045);
     } catch {
       // Ignore audio errors
     }
