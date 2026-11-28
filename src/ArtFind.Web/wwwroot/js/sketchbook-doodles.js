@@ -606,6 +606,7 @@
     cache.svg.classList.remove("is-fountain", "is-crayon", "is-brush", "is-pencil");
     cache.svg.classList.add(`is-${style.tool}`);
     cache.svg.style.color = style.color;
+    cache.activeTool = style.tool;
 
     for (const tName of ["fountain", "crayon", "brush", "pencil"]) {
       const g = cache.nib.querySelector(`.tool-${tName}`);
@@ -627,17 +628,113 @@
   }
 
   let sharedAudioCtx = null;
+  let activeToolAudio = null;
+
+  function getRunningAudioCtx() {
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (!AudioCtx) return null;
+    if (!sharedAudioCtx) sharedAudioCtx = new AudioCtx();
+    if (sharedAudioCtx.state === "suspended") {
+      sharedAudioCtx.resume().catch(() => {});
+    }
+    return sharedAudioCtx.state === "running" ? sharedAudioCtx : null;
+  }
 
   function unlockAudio() {
     try {
-      const AudioCtx = window.AudioContext || window.webkitAudioContext;
-      if (!AudioCtx) return;
-      if (!sharedAudioCtx) sharedAudioCtx = new AudioCtx();
-      if (sharedAudioCtx.state === "suspended") {
-        sharedAudioCtx.resume().catch(() => {});
-      }
+      getRunningAudioCtx();
     } catch {
       // Ignore audio errors when blocked
+    }
+  }
+
+  function ensureToolAudio(ctx) {
+    if (activeToolAudio && activeToolAudio.ctx === ctx) return activeToolAudio;
+
+    const length = Math.floor(ctx.sampleRate * 1.6);
+    const buffer = ctx.createBuffer(1, length, ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    let grain = 0.5;
+    for (let i = 0; i < length; i++) {
+      if (i % 90 === 0) grain = 0.4 + Math.random() * 0.6;
+      data[i] = (Math.random() * 2 - 1) * grain;
+    }
+
+    const src = ctx.createBufferSource();
+    src.buffer = buffer;
+    src.loop = true;
+
+    const filter = ctx.createBiquadFilter();
+    filter.type = "bandpass";
+    filter.frequency.value = 1800;
+    filter.Q.value = 1.4;
+
+    const gain = ctx.createGain();
+    gain.gain.value = 0.0001;
+
+    src.connect(filter);
+    filter.connect(gain);
+    gain.connect(ctx.destination);
+    src.start();
+
+    activeToolAudio = { ctx, src, filter, gain };
+    return activeToolAudio;
+  }
+
+  function updateToolAudio(mode, tool, intensity = 1) {
+    try {
+      const ctx = getRunningAudioCtx();
+      if (!ctx) return;
+      const audio = ensureToolAudio(ctx);
+      const now = ctx.currentTime;
+
+      if (mode === "idle") {
+        audio.gain.gain.setTargetAtTime(0.0001, now, 0.02);
+        return;
+      }
+
+      if (mode === "erase") {
+        audio.filter.type = "bandpass";
+        audio.filter.frequency.setTargetAtTime(980, now, 0.02);
+        audio.filter.Q.setTargetAtTime(1.3, now, 0.02);
+        audio.gain.gain.setTargetAtTime(Math.max(0.01, 0.13 * intensity), now, 0.015);
+        return;
+      }
+
+      // Unique acoustic profile per writing tool
+      let freq = 3200;
+      let q = 2.2;
+      let baseGain = 0.055;
+      if (tool === "pencil") {
+        freq = 2100;
+        q = 1.6;
+        baseGain = 0.08;
+      } else if (tool === "crayon") {
+        freq = 740;
+        q = 1.05;
+        baseGain = 0.095;
+      } else if (tool === "brush") {
+        freq = 1280;
+        q = 0.85;
+        baseGain = 0.06;
+      }
+
+      audio.filter.type = "bandpass";
+      audio.filter.frequency.setTargetAtTime(freq, now, 0.02);
+      audio.filter.Q.setTargetAtTime(q, now, 0.02);
+      audio.gain.gain.setTargetAtTime(Math.max(0.005, baseGain * intensity), now, 0.018);
+    } catch {
+      // Ignore audio errors
+    }
+  }
+
+  function stopToolAudio() {
+    try {
+      if (!activeToolAudio) return;
+      const now = activeToolAudio.ctx.currentTime;
+      activeToolAudio.gain.gain.setTargetAtTime(0.0001, now, 0.02);
+    } catch {
+      // Ignore audio errors
     }
   }
 
@@ -701,6 +798,7 @@
   }
 
   function resetFooterPaths(cache) {
+    stopToolAudio();
     const footer = cache.svg.closest(".footer");
     const sheet = cache.svg.closest(".footer-sheet");
     if (footer) footer.classList.remove("is-ripping");
@@ -840,6 +938,8 @@
     let tipPoint = cache.mainItems[0].startPt;
     let usingEraser = false;
     let isRipping = false;
+    let audioMode = "idle";
+    let audioIntensity = 0;
     let eraserPoint = tipPoint;
     const maxFill = cache.maxFill ?? 1.0;
 
@@ -878,6 +978,8 @@
           step.item.path.style.fillOpacity = fillT.toFixed(2);
           const pt = step.item.path.getPointAtLength(drawn);
           tipPoint = { x: pt.x + step.item.dx, y: pt.y };
+          audioMode = "draw";
+          audioIntensity = 0.45 + 0.55 * Math.sin(localT * Math.PI);
         }
       } else if (step.kind === "move") {
         if (elapsedMs < step.endMs) {
@@ -929,6 +1031,8 @@
               const scrubX = Math.sin(localT * Math.PI * 10) * 12;
               const scrubY = Math.cos(localT * Math.PI * 10) * 4;
               eraserPoint = { x: pt.x + tgt.dx + scrubX, y: pt.y + scrubY };
+              audioMode = "erase";
+              audioIntensity = 0.25 + 0.75 * Math.abs(Math.sin(localT * Math.PI * 10));
             }
           }
         }
@@ -991,6 +1095,12 @@
         sheet.style.clipPath = "";
         sheet.style.filter = "";
       }
+    }
+
+    if (elapsedMs >= timeline.totalMs) {
+      stopToolAudio();
+    } else {
+      updateToolAudio(audioMode, cache.activeTool, audioIntensity);
     }
 
     if (usingEraser) {
