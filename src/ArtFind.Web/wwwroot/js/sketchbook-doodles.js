@@ -506,7 +506,15 @@
   let footerAnimRaf = null;
   let footerAnimStart = 0;
   let footerAtBottom = false;
-  const FOOTER_DRAW_DURATION_MS = 2400;
+  const FOOTER_DRAW_DURATION_MS = 2800;
+
+  function easeInOutSine(t) {
+    return 0.5 - 0.5 * Math.cos(Math.PI * t);
+  }
+
+  function easeInOutCubic(t) {
+    return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+  }
 
   function initFooterWriting() {
     const svg = document.querySelector(".footer-write-svg");
@@ -520,10 +528,42 @@
       const items = paths.map((p) => {
         const len = p.getTotalLength();
         p.style.strokeDasharray = `${len}`;
-        return { path: p, len };
+        return {
+          path: p,
+          len,
+          startPt: p.getPointAtLength(0),
+          endPt: p.getPointAtLength(len),
+          start: 0,
+          end: 1
+        };
       });
-      const totalLen = items.reduce((s, it) => s + it.len, 0);
-      footerStrokeCache = { svg, items, totalLen, nib };
+
+      const gapWeight = 36;
+      const totalWeight =
+        items.reduce((s, it) => s + it.len, 0) + Math.max(0, items.length - 1) * gapWeight;
+
+      const moves = [];
+      let cursor = 0;
+      for (let i = 0; i < items.length; i++) {
+        const it = items[i];
+        it.start = cursor / totalWeight;
+        cursor += it.len;
+        it.end = cursor / totalWeight;
+
+        if (i < items.length - 1) {
+          const moveStart = cursor / totalWeight;
+          cursor += gapWeight;
+          const moveEnd = cursor / totalWeight;
+          moves.push({
+            from: it.endPt,
+            to: items[i + 1].startPt,
+            start: moveStart,
+            end: moveEnd
+          });
+        }
+      }
+
+      footerStrokeCache = { svg, items, moves, nib };
     }
 
     return footerStrokeCache;
@@ -533,21 +573,33 @@
     const cache = initFooterWriting();
     if (!cache) return;
 
-    const { items, totalLen, nib } = cache;
-    let remaining = progress * totalLen;
-    let tipPoint = items[0].path.getPointAtLength(0);
+    const { items, moves, nib } = cache;
+    const t = Math.min(1, Math.max(0, progress));
+    let tipPoint = t >= 1 ? items[items.length - 1].endPt : items[0].startPt;
 
     for (const it of items) {
-      if (remaining >= it.len) {
-        it.path.style.strokeDashoffset = "0";
-        tipPoint = it.path.getPointAtLength(it.len);
-        remaining -= it.len;
-      } else if (remaining > 0) {
-        it.path.style.strokeDashoffset = `${(it.len - remaining).toFixed(2)}`;
-        tipPoint = it.path.getPointAtLength(remaining);
-        remaining = 0;
-      } else {
+      if (t <= it.start) {
         it.path.style.strokeDashoffset = `${it.len.toFixed(2)}`;
+      } else if (t >= it.end) {
+        it.path.style.strokeDashoffset = "0";
+      } else {
+        const localT = (t - it.start) / (it.end - it.start);
+        const easedLocal = easeInOutCubic(localT);
+        const drawn = easedLocal * it.len;
+        it.path.style.strokeDashoffset = `${(it.len - drawn).toFixed(2)}`;
+        tipPoint = it.path.getPointAtLength(drawn);
+      }
+    }
+
+    for (const mv of moves) {
+      if (t > mv.start && t < mv.end) {
+        const localT = (t - mv.start) / (mv.end - mv.start);
+        const easedMove = easeInOutSine(localT);
+        tipPoint = {
+          x: mv.from.x + (mv.to.x - mv.from.x) * easedMove,
+          y: mv.from.y + (mv.to.y - mv.from.y) * easedMove - Math.sin(Math.PI * localT) * 6
+        };
+        break;
       }
     }
 
@@ -561,8 +613,8 @@
     }
 
     const t = Math.min(1, Math.max(0, (now - footerAnimStart) / FOOTER_DRAW_DURATION_MS));
-    const eased = 1 - Math.pow(1 - t, 1.35);
-    renderFooterWriting(eased);
+    const wordEased = easeInOutSine(t);
+    renderFooterWriting(wordEased);
 
     if (t < 1) {
       footerAnimRaf = requestAnimationFrame(stepFooterAnimation);
