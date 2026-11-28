@@ -196,9 +196,26 @@ textarea {
   position: sticky;
   top: 0;
   z-index: 40;
-  background: var(--bg);
-  border-bottom: 2px solid var(--ink);
+  background-color: oklch(0.925 0.02 83);
+  background-image:
+    linear-gradient(125deg, oklch(0.98 0.01 86 / 0.42) 0%, transparent 32%, oklch(0.84 0.025 80 / 0.28) 54%, transparent 78%, oklch(0.97 0.012 86 / 0.35) 100%),
+    url("data:image/svg+xml,%3Csvg viewBox='0 0 240 120' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='c'%3E%3CfeTurbulence type='turbulence' baseFrequency='0.035' numOctaves='4' seed='7'/%3E%3CfeDiffuseLighting in='noise' lighting-color='%23f6efe2' surfaceScale='2.4'%3E%3CfeDistantLight azimuth='55' elevation='52'/%3E%3C/feDiffuseLighting%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23c)' opacity='0.28'/%3E%3C/svg%3E");
   padding-top: env(safe-area-inset-top);
+  filter: drop-shadow(0 3px 4px oklch(0.2 0.018 55 / 0.12));
+}
+
+/* Ripped deckle paper edge along the bottom of the sticky nav */
+.bar::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 100%;
+  height: 11px;
+  pointer-events: none;
+  background-repeat: repeat-x;
+  background-size: 280px 11px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 280 11' preserveAspectRatio='none'%3E%3Cpath d='M0 0 L280 0 L280 3 L268 7 L256 3 L244 8 L231 4 L218 9 L205 3 L192 7 L180 4 L167 9 L153 3 L141 8 L128 4 L114 9 L102 3 L89 7 L76 4 L63 9 L50 3 L37 8 L24 4 L12 8 L0 4 Z' fill='%23ede3cf'/%3E%3C/svg%3E");
 }
 
 .bar-in {
