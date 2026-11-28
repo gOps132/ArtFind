@@ -8,12 +8,6 @@
             <span class="brand-name">ArtFind</span>
             <span class="brand-tag">Commission Directory</span>
         </div>
-
-        <div class="topbar-actions">
-            <button type="button" class="btn btn-ghost" @onclick="() => _showOptOut = true">
-                Artist Opt-Out
-            </button>
-        </div>
     </div>
 </header>
 
@@ -217,7 +211,10 @@
 <footer class="footer">
     <div class="footer-inner">
         <span>ArtFind promotes public open-for-commission artists via Bluesky AT Protocol. No full-res artwork is re-hosted.</span>
-        <span>Are you an artist? Add <code>#noartfind</code> to your bio or use Artist Opt-Out anytime.</span>
+        <span>
+            Are you an artist? Add <code>#noartfind</code> to your bio or
+            <button type="button" class="footer-link" @onclick="() => _showOptOut = true">opt out here</button>.
+        </span>
     </div>
 </footer>
 
