@@ -503,6 +503,10 @@
   }
 
   let footerStrokeCache = null;
+  let footerAnimRaf = null;
+  let footerAnimStart = 0;
+  let footerAtBottom = false;
+  const FOOTER_DRAW_DURATION_MS = 2400;
 
   function initFooterWriting() {
     const svg = document.querySelector(".footer-write-svg");
@@ -525,23 +529,11 @@
     return footerStrokeCache;
   }
 
-  function updateFooterWriting() {
+  function renderFooterWriting(progress) {
     const cache = initFooterWriting();
     if (!cache) return;
 
-    const { svg, items, totalLen, nib } = cache;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      for (const it of items) it.path.style.strokeDashoffset = "0";
-      return;
-    }
-
-    const vh = window.innerHeight || 800;
-    const maxScroll = Math.max(1, document.documentElement.scrollHeight - vh);
-    const rect = svg.getBoundingClientRect();
-    const span = Math.max(180, rect.height * 1.4);
-    const startScroll = Math.max(0, maxScroll - span);
-    const progress = Math.min(1, Math.max(0, (window.scrollY - startScroll) / Math.max(80, maxScroll - startScroll)));
-
+    const { items, totalLen, nib } = cache;
     let remaining = progress * totalLen;
     let tipPoint = items[0].path.getPointAtLength(0);
 
@@ -560,6 +552,55 @@
     }
 
     nib.setAttribute("transform", `translate(${(tipPoint.x - 12).toFixed(1)} ${(tipPoint.y - 52).toFixed(1)})`);
+  }
+
+  function stepFooterAnimation(now) {
+    if (!footerAtBottom) {
+      footerAnimRaf = null;
+      return;
+    }
+
+    const t = Math.min(1, Math.max(0, (now - footerAnimStart) / FOOTER_DRAW_DURATION_MS));
+    const eased = 1 - Math.pow(1 - t, 1.35);
+    renderFooterWriting(eased);
+
+    if (t < 1) {
+      footerAnimRaf = requestAnimationFrame(stepFooterAnimation);
+    } else {
+      footerAnimRaf = null;
+    }
+  }
+
+  function updateFooterWriting() {
+    const cache = initFooterWriting();
+    if (!cache) return;
+
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      renderFooterWriting(1);
+      return;
+    }
+
+    const vh = window.innerHeight || 800;
+    const maxScroll = Math.max(0, document.documentElement.scrollHeight - vh);
+    const scrollY = window.scrollY || 0;
+    const reachedBottom = scrollY >= maxScroll - 4;
+    const leftBottom = scrollY < maxScroll - 48;
+
+    if (reachedBottom && !footerAtBottom) {
+      footerAtBottom = true;
+      footerAnimStart = performance.now();
+      if (footerAnimRaf) cancelAnimationFrame(footerAnimRaf);
+      footerAnimRaf = requestAnimationFrame(stepFooterAnimation);
+    } else if (leftBottom && footerAtBottom) {
+      footerAtBottom = false;
+      if (footerAnimRaf) {
+        cancelAnimationFrame(footerAnimRaf);
+        footerAnimRaf = null;
+      }
+      renderFooterWriting(0);
+    } else if (!footerAtBottom) {
+      renderFooterWriting(0);
+    }
   }
 
   function scheduleSync() {
