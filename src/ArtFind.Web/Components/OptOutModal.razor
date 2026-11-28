@@ -23,6 +23,11 @@
                 <li>Or enter your Bluesky handle below to remove your listing immediately.</li>
             </ul>
 
+            @if (_error is not null)
+            {
+                <div class="modal-error" role="alert">@_error</div>
+            }
+
             @if (_submitted)
             {
                 <div class="modal-success">
@@ -72,6 +77,7 @@
     private bool _busy;
     private bool _submitted;
     private bool _closing;
+    private string? _error;
 
     protected override void OnParametersSet()
     {
@@ -85,9 +91,20 @@
     {
         if (string.IsNullOrWhiteSpace(_handle)) return;
         _busy = true;
-        await OnSubmitted.InvokeAsync((_handle, _reason));
-        _busy = false;
-        _submitted = true;
+        _error = null;
+        try
+        {
+            await OnSubmitted.InvokeAsync((_handle, _reason));
+            _submitted = true;
+        }
+        catch (Exception ex)
+        {
+            _error = $"Could not submit opt-out: {ex.Message}";
+        }
+        finally
+        {
+            _busy = false;
+        }
     }
 
     private async Task CloseAsync()

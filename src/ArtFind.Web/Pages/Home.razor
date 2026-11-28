@@ -6,14 +6,13 @@
     <div class="topbar-inner">
         <div class="brand">
             <span class="brand-name">ArtFind</span>
-            <span class="brand-divider" aria-hidden="true">/</span>
             <span class="brand-tag">Commission Directory</span>
         </div>
 
         <div class="topbar-actions">
             <span class="status-pill" title="Active data backend">
                 <span class="status-dot" aria-hidden="true"></span>
-                <span class="mono">@(CatalogService.IsUsingSupabase ? "LIVE · SUPABASE" : "SNAPSHOT · BLUESKY")</span>
+                <span class="mono">@(CatalogService.IsUsingSupabase ? "LIVE" : "SNAPSHOT")</span>
             </span>
             <button type="button" class="btn btn-ghost" @onclick="() => _showOptOut = true">
                 Artist Opt-Out
@@ -23,38 +22,16 @@
 </header>
 
 <main class="container">
-    <section class="hero-grid">
-        <div class="hero">
-            <div class="hero-eyebrow stagger-1">
-                <span>Curated Visual Index</span>
-                <span class="eyebrow-rule" aria-hidden="true"></span>
-                <span class="mono">Direct to Artist Page</span>
-            </div>
-            <h1 class="hero-title stagger-2">
-                Find an illustrator <em>open for work</em> right now.
-            </h1>
-            <p class="hero-subtitle stagger-3">
-                Write a Commission Brief, narrow by style or budget, and go straight to the Artist’s own page—no middleman, no markup.
-            </p>
-        </div>
-
-        <aside class="ledger-card stagger-3" aria-label="Directory summary">
-            <div class="ledger-row">
-                <span class="ledger-label">Open Artists</span>
-                <span class="ledger-value mono">@(_loading ? "—" : (_snapshot?.Artists.Count ?? 0).ToString())</span>
-            </div>
-            <div class="ledger-row">
-                <span class="ledger-label">Matched</span>
-                <span class="ledger-value mono">@(_loading ? "—" : Matches.Count.ToString())</span>
-            </div>
-            <div class="ledger-row">
-                <span class="ledger-label">Indexed</span>
-                <span class="ledger-value mono">@(_snapshot is null ? "—" : _snapshot.GeneratedAt.ToLocalTime().ToString("MMM d · HH:mm"))</span>
-            </div>
-        </aside>
+    <section class="hero">
+        <h1 class="hero-title">
+            Find an illustrator <em>open for work</em>
+        </h1>
+        <p class="hero-subtitle">
+            Filter by Commission Brief, style, or budget, then go directly to the Artist Page.
+        </p>
     </section>
 
-    <section class="brief-panel stagger-4" aria-label="Commission Brief and Filters">
+    <section class="brief-panel" aria-label="Commission Brief and Filters">
         <div class="brief-input-row">
             <div class="brief-input-wrap">
                 <svg class="brief-search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -64,7 +41,8 @@
                 <input class="brief-input"
                        type="search"
                        enterkeyhint="search"
-                       placeholder="Describe your Commission Brief… e.g. painterly fantasy portrait, chibi emotes, pixel art"
+                       aria-label="Commission Brief search"
+                       placeholder="Describe your Commission Brief (e.g. painterly portrait, chibi emotes, pixel art)"
                        @bind="_query"
                        @bind:event="oninput" />
             </div>
@@ -79,7 +57,7 @@
 
         <div class="brief-controls">
             <select class="filter-select" @bind="_selectedCategory" aria-label="Filter by category">
-                <option value="">All Categories</option>
+                <option value="">All categories</option>
                 @foreach (var item in AvailableCategories)
                 {
                     <option value="@item.Tag">@FormatTag(item.Tag) (@item.Count)</option>
@@ -87,7 +65,7 @@
             </select>
 
             <select class="filter-select" @bind="_maxBudgetValue" aria-label="Filter by maximum budget">
-                <option value="">Any Budget</option>
+                <option value="">Any budget</option>
                 <option value="30">Up to $30</option>
                 <option value="60">Up to $60</option>
                 <option value="120">Up to $120</option>
@@ -95,7 +73,7 @@
             </select>
 
             <select class="filter-select" @bind="_selectedPageType" aria-label="Filter by Artist Page platform">
-                <option value="">Any Artist Page</option>
+                <option value="">Any platform</option>
                 <option value="VGen">VGen</option>
                 <option value="Carrd">Carrd</option>
                 <option value="Kofi">Ko-fi</option>
@@ -208,18 +186,32 @@
 
     @if (_loading)
     {
-        <div class="empty-state">
-            <p style="margin: 0; color: var(--ink-muted);">Fetching open-for-commission artists…</p>
+        <section class="gallery-grid" aria-label="Loading artists">
+            @for (var i = 0; i < 6; i++)
+            {
+                <div class="skeleton-card" aria-hidden="true">
+                    <div class="skeleton-media"></div>
+                    <div class="skeleton-line skeleton-line-lg"></div>
+                    <div class="skeleton-line skeleton-line-sm"></div>
+                    <div class="skeleton-line skeleton-line-md"></div>
+                </div>
+            }
+        </section>
+    }
+    else if (_loadError is not null)
+    {
+        <div class="empty-state" role="alert">
+            <h2 class="empty-title">Could not load artist directory</h2>
+            <p class="empty-copy">@_loadError</p>
+            <button type="button" class="btn btn-primary" @onclick="LoadCatalogAsync">Retry</button>
         </div>
     }
     else if (Matches.Count == 0)
     {
         <div class="empty-state">
-            <h2 style="margin: 0 0 8px; font-family: 'Instrument Serif', Georgia, serif; font-size: 1.7rem; font-weight: 400;">
-                No matching open artists right now
-            </h2>
-            <p style="margin: 0 0 16px; color: var(--ink-secondary); font-size: 0.9rem;">
-                Try broadening your Commission Brief or clearing one of the filters.
+            <h2 class="empty-title">No matching open artists</h2>
+            <p class="empty-copy">
+                Try broadening your Commission Brief or clearing one of the active filters.
             </p>
             <button type="button" class="btn btn-primary" @onclick="ResetFilters">Reset Filters</button>
         </div>
@@ -261,11 +253,26 @@
     private bool _showOptOut;
     private bool _showTagBrowser;
     private string _tagSearch = string.Empty;
+    private string? _loadError;
 
-    protected override async Task OnInitializedAsync()
+    protected override Task OnInitializedAsync() => LoadCatalogAsync();
+
+    private async Task LoadCatalogAsync()
     {
-        _snapshot = await CatalogService.LoadCatalogAsync();
-        _loading = false;
+        _loading = true;
+        _loadError = null;
+        try
+        {
+            _snapshot = await CatalogService.LoadCatalogAsync();
+        }
+        catch (Exception ex)
+        {
+            _loadError = ex.Message;
+        }
+        finally
+        {
+            _loading = false;
+        }
     }
 
     private IReadOnlyList<(string Tag, int Count)> AvailableStyles =>
