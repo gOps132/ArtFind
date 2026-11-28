@@ -1409,7 +1409,7 @@ textarea {
   overflow: hidden;
   border-top: 2px dashed var(--border);
   background: oklch(0.915 0.032 82 / 0.9);
-  padding: 28px max(24px, env(safe-area-inset-right)) 0 max(24px, env(safe-area-inset-left));
+  padding: 28px max(24px, env(safe-area-inset-right)) 28px max(24px, env(safe-area-inset-left));
   font-size: 0.8rem;
   color: var(--ink-muted);
 }
@@ -1454,46 +1454,20 @@ textarea {
   }
 }
 
-.footer-giant {
+.footer-curtain {
   position: relative;
-  z-index: 1;
-  width: 100%;
-  margin-top: 24px;
-  display: flex;
-  justify-content: center;
+  height: 185vh;
   pointer-events: none;
   user-select: none;
 }
 
-.footer-write-svg {
-  width: min(1160px, 100%);
-  height: auto;
-  margin-bottom: -1.5%;
-  color: oklch(0.2 0.018 55 / 0.24);
-  overflow: visible;
-}
-
-.write-stroke {
-  stroke-width: 2.6;
-}
-
-.footer-pen-nib {
-  color: var(--accent);
-}
-
-.footer-fade {
-  position: absolute;
-  inset-inline: 0;
-  bottom: 0;
-  height: 40%;
-  z-index: 2;
+.footer-art-canvas {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
   pointer-events: none;
-  background: linear-gradient(
-    to top,
-    var(--bg) 0%,
-    oklch(0.942 0.018 84 / 0.35) 55%,
-    transparent 100%
-  );
+  z-index: 3;
 }
 
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }

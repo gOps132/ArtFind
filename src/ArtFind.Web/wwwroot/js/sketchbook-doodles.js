@@ -502,156 +502,208 @@
     bar.classList.toggle("is-compact", fullyFolded);
   }
 
-  let footerStrokeCache = null;
-  let footerAnimRaf = null;
-  let footerAnimStart = 0;
-  let footerAtBottom = false;
-  const FOOTER_DRAW_DURATION_MS = 2800;
+  let curtainState = null;
 
-  function easeInOutSine(t) {
-    return 0.5 - 0.5 * Math.cos(Math.PI * t);
+  function getFooterPhrase(loops) {
+    if (loops >= 9) return "Go find an artist ♥";
+    if (loops >= 6) return "Running low on ink";
+    if (loops >= 3) return "Still sketching?";
+    return "ArtFind";
   }
 
-  function easeInOutCubic(t) {
-    return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
-  }
+  function initFooterCurtain() {
+    const curtain = document.querySelector(".footer-curtain");
+    const canvas = document.querySelector(".footer-art-canvas");
+    if (!curtain || !canvas) return null;
 
-  function initFooterWriting() {
-    const svg = document.querySelector(".footer-write-svg");
-    if (!svg) return null;
+    if (!curtainState || !curtainState.canvas.isConnected) {
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return null;
 
-    if (!footerStrokeCache || !footerStrokeCache.svg.isConnected) {
-      const paths = Array.from(svg.querySelectorAll(".write-stroke"));
-      const nib = svg.querySelector(".footer-pen-nib");
-      if (paths.length === 0 || !nib) return null;
+      curtainState = {
+        curtain,
+        canvas,
+        ctx,
+        dpr: window.devicePixelRatio || 1,
+        targetY: 0,
+        currentY: 0,
+        targetSize: 120,
+        currentSize: 120,
+        clearTop: 0,
+        clearBottom: 0,
+        loops: 0,
+        prevTop: 0,
+        rafId: null,
+        active: false
+      };
 
-      const items = paths.map((p) => {
-        const len = p.getTotalLength();
-        p.style.strokeDasharray = `${len}`;
-        return {
-          path: p,
-          len,
-          startPt: p.getPointAtLength(0),
-          endPt: p.getPointAtLength(len),
-          start: 0,
-          end: 1
-        };
-      });
-
-      const gapWeight = 36;
-      const totalWeight =
-        items.reduce((s, it) => s + it.len, 0) + Math.max(0, items.length - 1) * gapWeight;
-
-      const moves = [];
-      let cursor = 0;
-      for (let i = 0; i < items.length; i++) {
-        const it = items[i];
-        it.start = cursor / totalWeight;
-        cursor += it.len;
-        it.end = cursor / totalWeight;
-
-        if (i < items.length - 1) {
-          const moveStart = cursor / totalWeight;
-          cursor += gapWeight;
-          const moveEnd = cursor / totalWeight;
-          moves.push({
-            from: it.endPt,
-            to: items[i + 1].startPt,
-            start: moveStart,
-            end: moveEnd
-          });
-        }
-      }
-
-      footerStrokeCache = { svg, items, moves, nib };
+      resizeFooterCanvas();
     }
 
-    return footerStrokeCache;
+    return curtainState;
   }
 
-  function renderFooterWriting(progress) {
-    const cache = initFooterWriting();
-    if (!cache) return;
-
-    const { items, moves, nib } = cache;
-    const t = Math.min(1, Math.max(0, progress));
-    let tipPoint = t >= 1 ? items[items.length - 1].endPt : items[0].startPt;
-
-    for (const it of items) {
-      if (t <= it.start) {
-        it.path.style.strokeDashoffset = `${it.len.toFixed(2)}`;
-      } else if (t >= it.end) {
-        it.path.style.strokeDashoffset = "0";
-      } else {
-        const localT = (t - it.start) / (it.end - it.start);
-        const easedLocal = easeInOutCubic(localT);
-        const drawn = easedLocal * it.len;
-        it.path.style.strokeDashoffset = `${(it.len - drawn).toFixed(2)}`;
-        tipPoint = it.path.getPointAtLength(drawn);
-      }
+  function resizeFooterCanvas() {
+    if (!curtainState || !curtainState.canvas.isConnected) return;
+    const { canvas } = curtainState;
+    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    const w = Math.round((window.innerWidth || 1200) * dpr);
+    const h = Math.round((window.innerHeight || 800) * dpr);
+    curtainState.dpr = dpr;
+    if (canvas.width !== w || Math.abs(canvas.height - h) > 80) {
+      canvas.width = w;
+      canvas.height = h;
     }
-
-    for (const mv of moves) {
-      if (t > mv.start && t < mv.end) {
-        const localT = (t - mv.start) / (mv.end - mv.start);
-        const easedMove = easeInOutSine(localT);
-        tipPoint = {
-          x: mv.from.x + (mv.to.x - mv.from.x) * easedMove,
-          y: mv.from.y + (mv.to.y - mv.from.y) * easedMove - Math.sin(Math.PI * localT) * 6
-        };
-        break;
-      }
-    }
-
-    nib.setAttribute("transform", `translate(${(tipPoint.x - 12).toFixed(1)} ${(tipPoint.y - 52).toFixed(1)})`);
   }
 
-  function stepFooterAnimation(now) {
-    if (!footerAtBottom) {
-      footerAnimRaf = null;
+  function renderFooterCurtain() {
+    const st = curtainState;
+    if (!st || !st.canvas.isConnected) return;
+
+    const { ctx, canvas, dpr } = st;
+    const clearH = Math.max(0, st.clearBottom - st.clearTop);
+    ctx.clearRect(0, 0, canvas.width, clearH);
+
+    const text = getFooterPhrase(st.loops);
+    const size = Math.max(36, st.currentSize);
+    ctx.font = `${size}px "Architects Daughter", cursive, sans-serif`;
+    ctx.textBaseline = "alphabetic";
+
+    const tracking = -size * 0.03;
+    let totalWidth = 0;
+    for (let i = 0; i < text.length; i++) {
+      totalWidth += ctx.measureText(text[i]).width + (i < text.length - 1 ? tracking : 0);
+    }
+
+    let x = canvas.width / 2 - totalWidth / 2;
+    const y = st.currentY;
+    const accentColors = [
+      "rgba(184, 93, 59, 0.58)",
+      "rgba(58, 99, 152, 0.55)",
+      "rgba(96, 132, 92, 0.55)"
+    ];
+    const echoStroke = accentColors[st.loops % accentColors.length];
+    const inkStroke = "#2b2520";
+
+    for (let i = 0; i < text.length; i++) {
+      const ch = text[i];
+      const w = ctx.measureText(ch).width;
+      const jitterY = Math.sin(i * 1.9 + y * 0.018) * (2.2 * dpr);
+      const tilt = Math.sin(i * 2.3 + st.loops) * 0.035;
+
+      ctx.save();
+      ctx.translate(x + w / 2, y + jitterY);
+      ctx.rotate(tilt);
+
+      // Risograph / printmaking offset sketch outline
+      ctx.globalCompositeOperation = "source-over";
+      ctx.lineJoin = "round";
+      ctx.lineCap = "round";
+      ctx.lineWidth = 2.2 * dpr;
+      ctx.strokeStyle = echoStroke;
+      ctx.strokeText(ch, -w / 2 + 3 * dpr, 3 * dpr);
+
+      // Primary charcoal ink outline
+      ctx.lineWidth = 2.4 * dpr;
+      ctx.strokeStyle = inkStroke;
+      ctx.strokeText(ch, -w / 2, 0);
+
+      // Punch out interior so stacked echoes form a clean layered cascade
+      ctx.globalCompositeOperation = "destination-out";
+      ctx.fillStyle = "#000";
+      ctx.fillText(ch, -w / 2, 0);
+      ctx.restore();
+
+      x += w + tracking;
+    }
+  }
+
+  function stepFooterCurtain() {
+    const st = curtainState;
+    if (!st || !st.active) {
+      if (st) st.rafId = null;
       return;
     }
 
-    const t = Math.min(1, Math.max(0, (now - footerAnimStart) / FOOTER_DRAW_DURATION_MS));
-    const wordEased = easeInOutSine(t);
-    renderFooterWriting(wordEased);
+    st.currentY += (st.targetY - st.currentY) * 0.14;
+    st.currentSize += (st.targetSize - st.currentSize) * 0.14;
+    renderFooterCurtain();
 
-    if (t < 1) {
-      footerAnimRaf = requestAnimationFrame(stepFooterAnimation);
+    if (
+      Math.abs(st.targetY - st.currentY) > 0.4 ||
+      Math.abs(st.targetSize - st.currentSize) > 0.2
+    ) {
+      st.rafId = requestAnimationFrame(stepFooterCurtain);
     } else {
-      footerAnimRaf = null;
+      st.rafId = null;
     }
   }
 
   function updateFooterWriting() {
-    const cache = initFooterWriting();
-    if (!cache) return;
+    const st = initFooterCurtain();
+    if (!st) return;
 
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      renderFooterWriting(1);
+    const vw = window.innerWidth || 1200;
+    const vh = window.innerHeight || 800;
+    const rect = st.curtain.getBoundingClientRect();
+    const dpr = st.dpr;
+
+    // Clip fixed canvas strictly to the visible curtain area below the page/footer
+    const clipTop = Math.max(0, rect.top);
+    st.canvas.style.clipPath = `inset(${clipTop.toFixed(1)}px 0 0 0)`;
+
+    if (rect.top >= vh) {
+      st.active = false;
+      st.loops = 0;
+      st.ctx.clearRect(0, 0, st.canvas.width, st.canvas.height);
+      if (st.rafId) {
+        cancelAnimationFrame(st.rafId);
+        st.rafId = null;
+      }
       return;
     }
 
-    const vh = window.innerHeight || 800;
-    const maxScroll = Math.max(0, document.documentElement.scrollHeight - vh);
-    const scrollY = window.scrollY || 0;
-    const reachedBottom = scrollY >= maxScroll - 4;
-    const leftBottom = scrollY < maxScroll - 48;
+    st.active = true;
+    const deltaTop = rect.top - st.prevTop;
+    st.prevTop = rect.top;
 
-    if (reachedBottom && !footerAtBottom) {
-      footerAtBottom = true;
-      footerAnimStart = performance.now();
-      if (footerAnimRaf) cancelAnimationFrame(footerAnimRaf);
-      footerAnimRaf = requestAnimationFrame(stepFooterAnimation);
-    } else if (leftBottom && footerAtBottom) {
-      footerAtBottom = false;
-      if (footerAnimRaf) {
-        cancelAnimationFrame(footerAnimRaf);
-        footerAnimRaf = null;
+    const progress = (vh - rect.top) / vh;
+    let baseSize = Math.min(1728, vw) / 6.2 * dpr;
+    if (st.loops > 0) {
+      baseSize -= baseSize * Math.sin(progress - 2.2) * 0.35 - 0.08 * baseSize;
+    }
+
+    const cap = baseSize * 0.72;
+    const y = vh * dpr + cap - progress * vh * dpr + st.loops * vh * dpr;
+
+    st.clearTop = cap;
+    st.clearBottom = y;
+    st.targetSize = baseSize;
+
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      st.currentSize = Math.min(1728, vw) / 6.2 * dpr;
+      st.currentY = vh * dpr * 0.62;
+      st.clearTop = 0;
+      st.clearBottom = vh * dpr;
+      renderFooterCurtain();
+      return;
+    }
+
+    if (rect.bottom <= vh + 2) {
+      st.loops += 1;
+      window.scrollTo(0, st.curtain.offsetTop);
+      st.targetY = y + vh * dpr;
+      st.currentY = st.targetY;
+      st.currentSize = baseSize;
+    } else {
+      st.targetY = st.loops > 0 ? y + vh * dpr : y;
+      if (deltaTop > 0 && deltaTop < vh * 0.5 && rect.top > 0) {
+        st.loops = 0;
       }
-      renderFooterWriting(0);
-    } else if (!footerAtBottom) {
-      renderFooterWriting(0);
+    }
+
+    if (!st.rafId) {
+      st.rafId = requestAnimationFrame(stepFooterCurtain);
     }
   }
 
@@ -696,12 +748,18 @@
     setTimeout(rotateShiftingDoodles, 1800 + Math.random() * 1800);
   }
 
+  function handleResize() {
+    resizeFooterCanvas();
+    scheduleSync();
+  }
+
   function init() {
     syncHeaderState();
     syncDoodles();
     updateFooterWriting();
     window.addEventListener("scroll", scheduleSync, { passive: true });
-    window.addEventListener("resize", scheduleSync, { passive: true });
+    window.addEventListener("resize", handleResize, { passive: true });
+    document.fonts?.ready.then(updateFooterWriting);
 
     if (typeof ResizeObserver !== "undefined") {
       const ro = new ResizeObserver(scheduleSync);
