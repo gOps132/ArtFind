@@ -591,6 +591,8 @@ textarea {
 }
 
 .tag-browser {
+  position: relative;
+  overflow: hidden;
   padding: 14px;
   border-radius: var(--radius-sketch);
   background-color: var(--surface-raised);
@@ -599,6 +601,21 @@ textarea {
     url("data:image/svg+xml,%3Csvg viewBox='0 0 220 220' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='tb'%3E%3CfeTurbulence type='turbulence' baseFrequency='0.035' numOctaves='3' seed='11'/%3E%3CfeDiffuseLighting in='noise' lighting-color='%23faf5eb' surfaceScale='2.5'%3E%3CfeDistantLight azimuth='55' elevation='50'/%3E%3C/feDiffuseLighting%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23tb)' opacity='0.35'/%3E%3C/svg%3E");
   border: 2px solid var(--ink);
   box-shadow: var(--shadow-sketch);
+}
+
+.tag-browser::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2;
+  background: linear-gradient(
+    to bottom,
+    oklch(0.2 0.018 55 / 0.32) 0%,
+    oklch(0.2 0.018 55 / 0.1) 55%,
+    transparent 100%
+  );
+  opacity: var(--fold-tags, 0);
 }
 
 .tag-browser-header {
