@@ -567,6 +567,7 @@
   function resetFooterPaths(cache) {
     for (const it of cache.mainItems) {
       it.path.style.strokeDashoffset = `${it.len.toFixed(2)}`;
+      it.path.style.fillOpacity = "0";
       it.path.style.opacity = "1";
     }
     cache.typoGroup.replaceChildren();
@@ -667,12 +668,15 @@
       if (step.kind === "draw") {
         if (elapsedMs >= step.endMs) {
           step.item.path.style.strokeDashoffset = "0";
+          step.item.path.style.fillOpacity = "1";
           tipPoint = step.item.endPt;
         } else {
           const localT = (elapsedMs - step.startMs) / (step.endMs - step.startMs);
           const eased = easeInOutCubic(localT);
           const drawn = eased * step.item.len;
           step.item.path.style.strokeDashoffset = `${(step.item.len - drawn).toFixed(2)}`;
+          const fillT = Math.min(1, Math.max(0, (localT - 0.65) / 0.35));
+          step.item.path.style.fillOpacity = fillT.toFixed(2);
           const pt = step.item.path.getPointAtLength(drawn);
           tipPoint = { x: pt.x + step.item.dx, y: pt.y };
         }
@@ -701,6 +705,7 @@
         if (elapsedMs >= step.endMs) {
           for (const tgt of step.targets) {
             tgt.path.style.strokeDashoffset = `${tgt.len.toFixed(2)}`;
+            tgt.path.style.fillOpacity = "0";
             tgt.path.style.opacity = "0";
           }
           tipPoint = step.targets[step.targets.length - 1].startPt;
@@ -715,10 +720,12 @@
             const tgt = step.targets[idx];
             if (idx < seg) {
               tgt.path.style.strokeDashoffset = `${tgt.len.toFixed(2)}`;
+              tgt.path.style.fillOpacity = "0";
               tgt.path.style.opacity = "0";
             } else if (idx === seg) {
               const remain = (1 - easeInOutSine(segT)) * tgt.len;
               tgt.path.style.strokeDashoffset = `${(tgt.len - remain).toFixed(2)}`;
+              tgt.path.style.fillOpacity = Math.max(0, 1 - segT * 2.5).toFixed(2);
               const pt = tgt.path.getPointAtLength(remain);
               const scrubX = Math.sin(localT * Math.PI * 10) * 12;
               const scrubY = Math.cos(localT * Math.PI * 10) * 4;
@@ -777,6 +784,7 @@
       if (footer) footer.style.setProperty("--fold-footer", outOfView ? "1" : "0");
       for (const it of cache.mainItems) {
         it.path.style.strokeDashoffset = "0";
+        it.path.style.fillOpacity = "1";
         it.path.style.opacity = "1";
       }
       return;

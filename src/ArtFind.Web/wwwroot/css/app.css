@@ -1521,12 +1521,23 @@ textarea {
   width: min(1160px, 100%);
   height: auto;
   margin-bottom: -1.5%;
-  color: oklch(0.2 0.018 55 / 0.24);
+  color: oklch(0.2 0.018 55 / 0.34);
   overflow: visible;
 }
 
 .write-stroke {
-  stroke-width: 2.6;
+  stroke-width: 4.2;
+}
+
+.footer-write-paths .write-stroke,
+.footer-typo-paths .write-stroke {
+  fill: currentColor;
+  fill-opacity: 0;
+}
+
+.footer-flourish-paths .write-stroke {
+  fill: none;
+  stroke-width: 3.6;
 }
 
 .footer-pen-nib,
