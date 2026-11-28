@@ -1,9 +1,9 @@
 :root {
-  /* Hand-drawn & Sketchy: inspired by webdev.teknium.io (#sketchy Rough.js / Wired Elements) */
-  --bg: oklch(0.97 0.015 90);
-  --surface: oklch(0.945 0.018 88);
-  --surface-raised: oklch(0.992 0.008 90);
-  --surface-muted: oklch(0.91 0.02 88);
+  /* Hand-drawn & Sketchy: warm toned sketchbook paper (never near-white) */
+  --bg: oklch(0.915 0.032 82);
+  --surface: oklch(0.88 0.034 80);
+  --surface-raised: oklch(0.958 0.018 85);
+  --surface-muted: oklch(0.845 0.032 80);
   --ink: oklch(0.2 0.018 55);
   --ink-secondary: oklch(0.38 0.015 55);
   --ink-muted: oklch(0.5 0.012 55);
@@ -45,7 +45,7 @@ body {
   margin: 0;
   padding: 0;
   background-color: var(--bg);
-  background-image: radial-gradient(oklch(0.2 0.018 55 / 0.07) 1px, transparent 0);
+  background-image: radial-gradient(oklch(0.2 0.018 55 / 0.12) 1px, transparent 0);
   background-size: 24px 24px;
   color: var(--ink);
   font-family: "DM Sans", -apple-system, BlinkMacSystemFont, sans-serif;
@@ -437,19 +437,6 @@ textarea {
 .hero {
   max-width: 68ch;
   margin-bottom: 24px;
-}
-
-.hero-tag {
-  display: inline-block;
-  font-size: 0.68rem;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  color: var(--accent);
-  background: var(--accent-soft);
-  border: 1.5px solid var(--accent);
-  border-radius: var(--radius-sketch-sm);
-  padding: 2px 8px;
-  margin-bottom: 10px;
 }
 
 .hero-title {
