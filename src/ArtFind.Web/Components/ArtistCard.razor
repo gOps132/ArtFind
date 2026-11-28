@@ -7,7 +7,9 @@
          aria-label="Preview @Artist.DisplayName artwork">
         @if (CurrentPreview is not null)
         {
-            <img src="@CurrentPreview.ThumbnailUrl"
+            <img @key="CurrentPreview.ThumbnailUrl"
+                 class="card-img-fade"
+                 src="@CurrentPreview.ThumbnailUrl"
                  alt="@(string.IsNullOrWhiteSpace(CurrentPreview.AltText) ? $"{Artist.DisplayName} commission sample" : CurrentPreview.AltText)"
                  loading="lazy"
                  decoding="async" />

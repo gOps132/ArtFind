@@ -1,9 +1,9 @@
 :root {
-  /* Hand-drawn & Sketchy: inspired by webdev.teknium.io (#sketchy Rough.js / Wired Elements) */
-  --bg: oklch(0.97 0.015 90);
-  --surface: oklch(0.945 0.018 88);
-  --surface-raised: oklch(0.992 0.008 90);
-  --surface-muted: oklch(0.91 0.02 88);
+  /* Hand-drawn & Sketchy: warm toned sketchbook paper (never near-white) */
+  --bg: oklch(0.915 0.032 82);
+  --surface: oklch(0.88 0.034 80);
+  --surface-raised: oklch(0.958 0.018 85);
+  --surface-muted: oklch(0.845 0.032 80);
   --ink: oklch(0.2 0.018 55);
   --ink-secondary: oklch(0.38 0.015 55);
   --ink-muted: oklch(0.5 0.012 55);
@@ -44,7 +44,10 @@ html,
 body {
   margin: 0;
   padding: 0;
-  background: var(--bg);
+  overflow-x: clip;
+  background-color: var(--bg);
+  background-image: radial-gradient(oklch(0.2 0.018 55 / 0.12) 1px, transparent 0);
+  background-size: 24px 24px;
   color: var(--ink);
   font-family: "DM Sans", -apple-system, BlinkMacSystemFont, sans-serif;
   -webkit-font-smoothing: antialiased;
@@ -110,10 +113,36 @@ textarea {
 }
 
 .shell {
+  position: relative;
+  z-index: 1;
   min-height: 100vh;
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
+  overflow-x: clip;
+}
+
+/* Scroll-reactive sketchbook doodle layer */
+.sketchbook-doodles {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  max-width: 100%;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.doodle-stroke {
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.doodle-dashed {
+  stroke-dasharray: 6 6;
 }
 
 .bar {
@@ -434,23 +463,37 @@ textarea {
 
 .hero {
   max-width: 68ch;
-  margin-bottom: 22px;
+  margin-bottom: 24px;
 }
 
 .hero-title {
   font-family: "Architects Daughter", cursive, sans-serif;
-  font-size: 2.25rem;
-  line-height: 1.15;
+  font-size: 2.3rem;
+  line-height: 1.18;
   font-weight: 400;
-  margin: 0 0 6px;
+  margin: 0 0 8px;
 }
 
-.hero-title em {
-  font-style: normal;
+.hero-highlight {
+  position: relative;
+  display: inline-block;
   color: var(--accent);
-  text-decoration: underline;
-  text-decoration-style: wavy;
-  text-underline-offset: 4px;
+}
+
+.hero-squiggle {
+  position: absolute;
+  left: -2px;
+  right: -2px;
+  bottom: -6px;
+  width: calc(100% + 4px);
+  height: 12px;
+  color: var(--accent);
+  pointer-events: none;
+}
+
+.hero-squiggle path {
+  stroke-dasharray: 260;
+  stroke-dashoffset: 0;
 }
 
 .hero-subtitle {
@@ -506,6 +549,17 @@ textarea {
   height: 100%;
   object-fit: cover;
   display: block;
+  transition: transform 260ms var(--ease-out);
+}
+
+.card-img-fade {
+  animation: imgFade 160ms var(--ease-out) both;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .artist-card:hover .card-media img {
+    transform: scale(1.03);
+  }
 }
 
 .media-badge-row {
@@ -797,6 +851,47 @@ textarea {
   gap: 10px;
 }
 
+.sheet-action-row {
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+}
+
+.copy-btn {
+  flex: none;
+  min-width: 96px;
+}
+
+.copy-icon-wrap {
+  position: relative;
+  width: 16px;
+  height: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.copy-icon {
+  position: absolute;
+  inset: 0;
+  transition:
+    opacity 300ms cubic-bezier(0.2, 0, 0, 1),
+    transform 300ms cubic-bezier(0.2, 0, 0, 1),
+    filter 300ms cubic-bezier(0.2, 0, 0, 1);
+}
+
+.copy-icon.is-visible {
+  opacity: 1;
+  transform: scale(1);
+  filter: blur(0);
+}
+
+.copy-icon.is-hidden {
+  opacity: 0;
+  transform: scale(0.25);
+  filter: blur(4px);
+}
+
 .modal-card {
   width: min(460px, 100%);
   background: var(--surface-raised);
@@ -872,6 +967,11 @@ textarea {
   border-radius: var(--radius-sketch);
 }
 
+.empty-doodle {
+  color: var(--accent);
+  margin-bottom: 12px;
+}
+
 .empty-title {
   margin: 0 0 8px;
   font-family: "Architects Daughter", cursive, sans-serif;
@@ -885,7 +985,8 @@ textarea {
 
 .footer {
   border-top: 2px dashed var(--border);
-  padding: 20px 24px;
+  background: oklch(0.915 0.032 82 / 0.9);
+  padding: 20px max(24px, env(safe-area-inset-right)) max(20px, env(safe-area-inset-bottom)) max(24px, env(safe-area-inset-left));
   font-size: 0.8rem;
   color: var(--ink-muted);
 }
@@ -897,6 +998,7 @@ textarea {
   flex-wrap: wrap;
   justify-content: space-between;
   gap: 10px;
+  overflow-wrap: anywhere;
 }
 
 .footer-link {
@@ -916,8 +1018,38 @@ textarea {
 @keyframes modalEnter { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: scale(1); } }
 @keyframes modalExit { from { opacity: 1; transform: scale(1); } to { opacity: 0; transform: scale(0.96); } }
 
+@keyframes imgFade { from { opacity: 0.35; } to { opacity: 1; } }
+@keyframes drawSquiggle { from { stroke-dashoffset: 260; } to { stroke-dashoffset: 0; } }
+@keyframes drawDoodle { from { stroke-dashoffset: 220; opacity: 0; } to { stroke-dashoffset: 0; opacity: 1; } }
+
+@media (prefers-reduced-motion: no-preference) {
+  .hero-squiggle path {
+    animation: drawSquiggle 520ms var(--ease-out) 120ms both;
+  }
+
+  .doodle-stroke:not(.doodle-dashed) {
+    stroke-dasharray: 220;
+    animation: drawDoodle 650ms var(--ease-out) both;
+  }
+
+  .doodle-dashed {
+    animation: fadeIn 450ms var(--ease-out) both;
+  }
+
+  .skeleton-media,
+  .skeleton-line {
+    animation: pulseSoft 1.4s ease-in-out infinite;
+  }
+
+  @keyframes pulseSoft {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .btn, .chip, .nav-pill, .artist-card { transition-duration: 0.01ms !important; }
+  .btn, .chip, .nav-pill, .artist-card, .card-media img, .copy-icon { transition-duration: 0.01ms !important; }
+  .hero-squiggle path { animation: none; stroke-dashoffset: 0; }
 }
 
 @media (pointer: coarse) {
