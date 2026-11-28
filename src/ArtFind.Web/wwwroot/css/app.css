@@ -246,31 +246,27 @@ textarea {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1600 14' preserveAspectRatio='none'%3E%3Cpath d='M0 0 L1600 0 L1600 4 L1548 7 L1512 3 L1466 5 L1431 11 L1384 6 L1338 8 L1292 2 L1247 5 L1214 10 L1162 4 L1115 6 L1068 3 L1033 9 L982 5 L936 12 L884 7 L841 4 L792 8 L748 3 L695 6 L651 11 L602 4 L558 7 L512 2 L468 9 L419 5 L374 11 L321 4 L276 7 L228 3 L184 10 L132 5 L86 8 L39 3 L0 6 Z' fill='%23ede3cf'/%3E%3C/svg%3E");
 }
 
-/* 3D Origami paper-fold landing drawer inside .bar */
+/* 3D Origami paper-fold landing flap: ripped edge stays flush with the folding bottom */
 .bar-landing {
-  display: grid;
-  grid-template-rows: 1fr;
-  perspective: 900px;
-  transition: grid-template-rows 280ms var(--ease-out);
+  perspective: 1100px;
+  overflow: hidden;
+  max-height: calc((1 - var(--fold, 0)) * 180px);
 }
 
 .bar.is-compact .bar-landing {
-  grid-template-rows: 0fr;
   pointer-events: none;
 }
 
 .bar-landing-inner {
   position: relative;
-  overflow: hidden;
   max-width: 1280px;
   width: 100%;
   margin: 0 auto;
-  padding: 18px max(24px, env(safe-area-inset-right)) 16px max(24px, env(safe-area-inset-left));
+  padding: 16px max(24px, env(safe-area-inset-right)) 18px max(24px, env(safe-area-inset-left));
   transform-origin: top center;
-  transform: rotateX(calc(var(--fold, 0) * -86deg));
-  opacity: calc(1 - var(--fold, 0) * 0.92);
+  transform: rotateX(calc(var(--fold, 0) * -84deg));
   backface-visibility: hidden;
-  will-change: transform, opacity;
+  will-change: transform;
 }
 
 .bar-landing-inner::after {
@@ -280,16 +276,11 @@ textarea {
   pointer-events: none;
   background: linear-gradient(
     to bottom,
-    oklch(0.2 0.018 55 / 0.28) 0%,
-    oklch(0.2 0.018 55 / 0.08) 45%,
+    oklch(0.2 0.018 55 / 0.24) 0%,
+    oklch(0.2 0.018 55 / 0.06) 55%,
     transparent 100%
   );
   opacity: var(--fold, 0);
-}
-
-.bar.is-compact .bar-landing-inner {
-  padding-top: 0;
-  padding-bottom: 0;
 }
 
 .bar-landing-grid {
@@ -540,37 +531,35 @@ textarea {
 }
 
 .tag-browser-wrap {
-  display: grid;
-  grid-template-rows: 1fr;
-  perspective: 900px;
+  perspective: 1100px;
+  overflow: hidden;
   max-width: 1280px;
   margin: 0 auto;
-  padding: 0 max(24px, env(safe-area-inset-right)) 14px max(24px, env(safe-area-inset-left));
-  transition:
-    grid-template-rows 260ms var(--ease-out),
-    padding-bottom 260ms var(--ease-out);
+  max-height: calc((1 - var(--fold, 0)) * 420px);
+  padding: 0 max(24px, env(safe-area-inset-right)) calc((1 - var(--fold, 0)) * 14px) max(24px, env(safe-area-inset-left));
 }
 
 .bar.is-compact .tag-browser-wrap {
-  grid-template-rows: 0fr;
-  padding-bottom: 0;
   pointer-events: none;
 }
 
 .tag-browser-clip {
   position: relative;
-  overflow: hidden;
   transform-origin: top center;
-  transform: rotateX(calc(var(--fold, 0) * -86deg));
-  opacity: calc(1 - var(--fold, 0) * 0.92);
+  transform: rotateX(calc(var(--fold, 0) * -84deg));
   backface-visibility: hidden;
-  will-change: transform, opacity;
+  will-change: transform;
 }
 
 @media (prefers-reduced-motion: reduce) {
   .bar-landing-inner,
   .tag-browser-clip {
     transform: none;
+  }
+  .bar.is-compact .bar-landing,
+  .bar.is-compact .tag-browser-wrap {
+    max-height: 0;
+    padding-bottom: 0;
   }
 }
 
@@ -1409,31 +1398,27 @@ textarea {
 }
 
 @media (max-width: 640px) {
-  /* 3D Origami paper-fold landing drawer inside .bar */
+  /* 3D Origami paper-fold landing flap: ripped edge stays flush with the folding bottom */
 .bar-landing {
-  display: grid;
-  grid-template-rows: 1fr;
-  perspective: 900px;
-  transition: grid-template-rows 280ms var(--ease-out);
+  perspective: 1100px;
+  overflow: hidden;
+  max-height: calc((1 - var(--fold, 0)) * 180px);
 }
 
 .bar.is-compact .bar-landing {
-  grid-template-rows: 0fr;
   pointer-events: none;
 }
 
 .bar-landing-inner {
   position: relative;
-  overflow: hidden;
   max-width: 1280px;
   width: 100%;
   margin: 0 auto;
-  padding: 18px max(24px, env(safe-area-inset-right)) 16px max(24px, env(safe-area-inset-left));
+  padding: 16px max(24px, env(safe-area-inset-right)) 18px max(24px, env(safe-area-inset-left));
   transform-origin: top center;
-  transform: rotateX(calc(var(--fold, 0) * -86deg));
-  opacity: calc(1 - var(--fold, 0) * 0.92);
+  transform: rotateX(calc(var(--fold, 0) * -84deg));
   backface-visibility: hidden;
-  will-change: transform, opacity;
+  will-change: transform;
 }
 
 .bar-landing-inner::after {
@@ -1443,16 +1428,11 @@ textarea {
   pointer-events: none;
   background: linear-gradient(
     to bottom,
-    oklch(0.2 0.018 55 / 0.28) 0%,
-    oklch(0.2 0.018 55 / 0.08) 45%,
+    oklch(0.2 0.018 55 / 0.24) 0%,
+    oklch(0.2 0.018 55 / 0.06) 55%,
     transparent 100%
   );
   opacity: var(--fold, 0);
-}
-
-.bar.is-compact .bar-landing-inner {
-  padding-top: 0;
-  padding-bottom: 0;
 }
 
 .bar-landing-grid {
