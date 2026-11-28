@@ -1448,7 +1448,7 @@ textarea {
   position: relative;
   overflow: hidden;
   background-color: oklch(0.925 0.02 83);
-  padding: 28px max(24px, env(safe-area-inset-right)) 1.5rem max(24px, env(safe-area-inset-left));
+  padding: 28px max(24px, env(safe-area-inset-right)) 3.5rem max(24px, env(safe-area-inset-left));
   transform-origin: top center;
   transform-style: preserve-3d;
   transform: rotateX(calc(var(--fold-footer, 1) * 76deg));
