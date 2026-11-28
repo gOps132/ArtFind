@@ -1616,21 +1616,6 @@ textarea {
   filter: drop-shadow(2px 4px 4px rgba(35, 25, 18, 0.28));
 }
 
-.footer-fade {
-  position: absolute;
-  inset-inline: 0;
-  bottom: 0;
-  height: 40%;
-  z-index: 2;
-  pointer-events: none;
-  background: linear-gradient(
-    to top,
-    oklch(0.925 0.02 83) 0%,
-    oklch(0.925 0.02 83 / 0.35) 55%,
-    transparent 100%
-  );
-}
-
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
 @keyframes slideInRight { from { transform: translateX(100%); } to { transform: translateX(0); } }
