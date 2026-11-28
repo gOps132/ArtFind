@@ -480,6 +480,8 @@
     bar.style.setProperty("--fold-tags", foldTags.toFixed(3));
     bar.style.setProperty("--fold", (hasTagBrowser ? foldTags : foldHero).toFixed(3));
 
+    bar.classList.toggle("is-hero-folded", foldHero >= 0.97);
+
     const fullyFolded = hasTagBrowser ? foldTags >= 0.96 : foldHero >= 0.96;
     if (fullyFolded) {
       bar.classList.add("is-compact");
