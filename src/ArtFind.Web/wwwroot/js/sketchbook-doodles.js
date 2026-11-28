@@ -521,7 +521,7 @@
     { key: "crayon-coral", font: "marker", tool: "crayon", color: "oklch(0.56 0.18 28 / 0.48)", maxFill: 0.88, speed: 0.85 },
     { key: "crayon-cobalt", font: "cursive", tool: "crayon", color: "oklch(0.46 0.16 258 / 0.46)", maxFill: 0.88, speed: 0.9 },
     { key: "brush-sage", font: "cursive", tool: "brush", color: "oklch(0.45 0.12 162 / 0.45)", maxFill: 0.92, speed: 0.92 },
-    { key: "pencil-sketch", font: "sketch", tool: "pencil", color: "oklch(0.28 0.012 60 / 0.38)", maxFill: 0.48, speed: 1.05 }
+    { key: "pencil-sketch", font: "sketch", tool: "pencil", color: "oklch(0.36 0.01 70 / 0.56)", maxFill: 0.14, speed: 1.05 }
   ];
 
   function easeInOutSine(t) {
