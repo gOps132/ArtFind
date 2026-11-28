@@ -162,6 +162,87 @@
     })
   ];
 
+  // Cute die-cut stickers (vector SVG with cream die-cut outline)
+  const STICKERS = [
+    // 1. Cat paw sticker
+    () => `
+      <g class="sticker-diecut">
+        <ellipse cx="0" cy="8" rx="13" ry="10" fill="oklch(0.76 0.14 15)" stroke="oklch(0.2 0.018 55)" stroke-width="2" />
+        <circle cx="-12" cy="-6" r="4.5" fill="oklch(0.76 0.14 15)" stroke="oklch(0.2 0.018 55)" stroke-width="2" />
+        <circle cx="-4" cy="-12" r="4.5" fill="oklch(0.76 0.14 15)" stroke="oklch(0.2 0.018 55)" stroke-width="2" />
+        <circle cx="5" cy="-12" r="4.5" fill="oklch(0.76 0.14 15)" stroke="oklch(0.2 0.018 55)" stroke-width="2" />
+        <circle cx="12" cy="-5" r="4.5" fill="oklch(0.76 0.14 15)" stroke="oklch(0.2 0.018 55)" stroke-width="2" />
+      </g>`,
+    // 2. Sunflower star sticker
+    () => `
+      <g class="sticker-diecut">
+        <path d="M 0 -22 L 6 -7 L 22 -6 L 9 4 L 14 20 L 0 11 L -14 20 L -9 4 L -22 -6 L -6 -7 Z"
+              fill="oklch(0.86 0.16 90)" stroke="oklch(0.2 0.018 55)" stroke-width="2.2" stroke-linejoin="round" />
+        <circle cx="-4" cy="-2" r="1.6" fill="oklch(0.2 0.018 55)" />
+        <circle cx="4" cy="-2" r="1.6" fill="oklch(0.2 0.018 55)" />
+        <path d="M -3 3 Q 0 6 3 3" fill="none" stroke="oklch(0.2 0.018 55)" stroke-width="1.6" stroke-linecap="round" />
+      </g>`,
+    // 3. Cute bear face sticker
+    () => `
+      <g class="sticker-diecut">
+        <circle cx="-13" cy="-12" r="6" fill="oklch(0.78 0.08 65)" stroke="oklch(0.2 0.018 55)" stroke-width="2" />
+        <circle cx="13" cy="-12" r="6" fill="oklch(0.78 0.08 65)" stroke="oklch(0.2 0.018 55)" stroke-width="2" />
+        <ellipse cx="0" cy="2" rx="17" ry="15" fill="oklch(0.82 0.07 65)" stroke="oklch(0.2 0.018 55)" stroke-width="2" />
+        <ellipse cx="0" cy="5" rx="6" ry="4.5" fill="oklch(0.95 0.02 85)" />
+        <circle cx="-6" cy="-1" r="1.8" fill="oklch(0.2 0.018 55)" />
+        <circle cx="6" cy="-1" r="1.8" fill="oklch(0.2 0.018 55)" />
+        <circle cx="0" cy="4" r="2" fill="oklch(0.2 0.018 55)" />
+      </g>`,
+    // 4. Paint tube sticker
+    () => `
+      <g class="sticker-diecut">
+        <rect x="-9" y="-14" width="18" height="26" rx="3" fill="oklch(0.62 0.16 255)" stroke="oklch(0.2 0.018 55)" stroke-width="2" />
+        <rect x="-5" y="12" width="10" height="6" rx="1" fill="oklch(0.92 0.02 85)" stroke="oklch(0.2 0.018 55)" stroke-width="1.8" />
+        <rect x="-11" y="-18" width="22" height="5" rx="1" fill="oklch(0.86 0.16 90)" stroke="oklch(0.2 0.018 55)" stroke-width="1.8" />
+        <line x1="-5" y1="-2" x2="5" y2="-2" stroke="oklch(0.98 0.01 85)" stroke-width="2.5" stroke-linecap="round" />
+      </g>`,
+    // 5. Washi tape strip
+    () => `
+      <g opacity="0.72">
+        <path d="M -32 -9 L 30 -10 L 28 10 L -34 9 Z" fill="oklch(0.75 0.12 162 / 0.65)" stroke="oklch(0.2 0.018 55 / 0.35)" stroke-width="1.2" />
+        <circle cx="-18" cy="0" r="2.2" fill="oklch(0.98 0.01 85 / 0.8)" />
+        <circle cx="-4" cy="-2" r="2.2" fill="oklch(0.98 0.01 85 / 0.8)" />
+        <circle cx="10" cy="2" r="2.2" fill="oklch(0.98 0.01 85 / 0.8)" />
+        <circle cx="22" cy="-1" r="2.2" fill="oklch(0.98 0.01 85 / 0.8)" />
+      </g>`
+  ];
+
+  // Cute ink stamps
+  const STAMPS = [
+    () => ({
+      color: "oklch(0.55 0.18 28 / 0.45)",
+      svg: `
+        <rect x="-44" y="-14" width="88" height="28" rx="4" fill="none" stroke="currentColor" stroke-width="2.2" stroke-dasharray="5 2" />
+        <text x="0" y="4" text-anchor="middle" class="stamp-text">HAND-DRAWN</text>`
+    }),
+    () => ({
+      color: "oklch(0.49 0.17 258 / 0.45)",
+      svg: `
+        <circle cx="0" cy="0" r="26" fill="none" stroke="currentColor" stroke-width="2" />
+        <circle cx="0" cy="0" r="21" fill="none" stroke="currentColor" stroke-width="1.2" stroke-dasharray="3 3" />
+        <text x="0" y="-2" text-anchor="middle" class="stamp-text-sm">OPEN</text>
+        <text x="0" y="9" text-anchor="middle" class="stamp-text-sm">ARTIST ★</text>`
+    }),
+    () => ({
+      color: "oklch(0.48 0.14 162 / 0.48)",
+      svg: `
+        <rect x="-38" y="-13" width="76" height="26" rx="3" fill="none" stroke="currentColor" stroke-width="2.2" />
+        <text x="0" y="4" text-anchor="middle" class="stamp-text">SKETCH ✓</text>`
+    }),
+    () => ({
+      color: "oklch(0.22 0.02 55 / 0.4)",
+      svg: `
+        <path d="M -38 -10 Q -26 -16 -14 -10 T 10 -10 T 34 -10" fill="none" stroke="currentColor" stroke-width="1.6" />
+        <path d="M -38 0 Q -26 -6 -14 0 T 10 0 T 34 0" fill="none" stroke="currentColor" stroke-width="1.6" />
+        <path d="M -38 10 Q -26 4 -14 10 T 10 10 T 34 10" fill="none" stroke="currentColor" stroke-width="1.6" />`
+    })
+  ];
+
   function createLayer() {
     let svg = document.getElementById("sketchbook-doodles");
     if (svg) return svg;
@@ -177,51 +258,163 @@
   let generatedBands = 0;
   let liveCount = 0;
   let rafPending = false;
+  // Spatial record of placed points { x, y, r } for blue-noise / Poisson-like spacing
+  const placedPoints = [];
+  const placedGiants = [];
 
   function pickX(vw, index) {
     if (vw > 1120 && index % 4 !== 3) {
       const marginWidth = Math.max(70, (vw - 1240) / 2 + 65);
       return index % 2 === 0
-        ? 22 + Math.random() * marginWidth
-        : vw - 22 - Math.random() * marginWidth;
+        ? 28 + Math.random() * marginWidth
+        : vw - 28 - Math.random() * marginWidth;
     }
-    return 24 + Math.random() * Math.max(120, vw - 48);
+    return 32 + Math.random() * Math.max(120, vw - 64);
   }
 
-  function spawnDoodle(svg, x, y, isLive) {
+  function nearestDistSq(x, y, points) {
+    let minSq = Infinity;
+    // Only check points within a vertical window for speed
+    for (let i = points.length - 1; i >= 0; i--) {
+      const p = points[i];
+      const dy = y - p.y;
+      if (Math.abs(dy) > 420) continue;
+      const dx = x - p.x;
+      const dSq = dx * dx + dy * dy;
+      if (dSq < minSq) minSq = dSq;
+    }
+    return minSq;
+  }
+
+  // Mitchell's Best-Candidate sampling: organic Voronoi-like blue-noise distribution
+  // that prevents clumping while keeping natural variation in spacing.
+  function pickBlueNoisePoint(vw, yMin, yMax, minDist, indexSeed, candidates = 14) {
+    let bestX = pickX(vw, indexSeed);
+    let bestY = yMin + Math.random() * (yMax - yMin);
+    let bestScore = -1;
+    const minDistSq = minDist * minDist;
+
+    for (let c = 0; c < candidates; c++) {
+      const cx = pickX(vw, indexSeed + c);
+      const cy = yMin + Math.random() * (yMax - yMin);
+      const dSq = nearestDistSq(cx, cy, placedPoints);
+
+      // Accept immediately if comfortably spaced, with slight jitter so spacing stays organic
+      if (dSq >= minDistSq * (0.9 + Math.random() * 0.4)) {
+        return { x: cx, y: cy };
+      }
+
+      if (dSq > bestScore) {
+        bestScore = dSq;
+        bestX = cx;
+        bestY = cy;
+      }
+    }
+
+    return { x: bestX, y: bestY };
+  }
+
+  function spawnDoodle(svg, x, y, isLive, isGiant = false) {
     const spec = DOODLES[Math.floor(Math.random() * DOODLES.length)]();
     const rot = (Math.random() * 54 - 27).toFixed(1);
-    const scale = (0.62 + Math.random() * 1.05).toFixed(2);
+    const scale = isGiant
+      ? (4.8 + Math.random() * 2.4).toFixed(2)
+      : (0.62 + Math.random() * 1.05).toFixed(2);
     const color = pickColor();
 
     const g = document.createElementNS(SVG_NS, "g");
+    const shiftDur = (480 + Math.random() * 260).toFixed(0);
+    const shiftDelay = (-Math.random() * 600).toFixed(0);
     g.setAttribute("transform", `translate(${x.toFixed(1)} ${y.toFixed(1)}) rotate(${rot}) scale(${scale})`);
-    g.setAttribute("class", isLive ? "doodle-group doodle-live" : "doodle-group");
+    g.setAttribute(
+      "class",
+      [
+        "doodle-group",
+        isLive ? "doodle-live" : "",
+        isGiant ? "doodle-giant" : ""
+      ].filter(Boolean).join(" ")
+    );
     g.style.color = color;
+
+    const inner = document.createElementNS(SVG_NS, "g");
+    inner.setAttribute("class", "doodle-shift");
+    inner.style.animationDuration = `${shiftDur}ms`;
+    inner.style.animationDelay = `${shiftDelay}ms`;
 
     for (const d of spec.paths) {
       const path = document.createElementNS(SVG_NS, "path");
       path.setAttribute("d", d);
       path.setAttribute("class", spec.dashed ? "doodle-stroke doodle-dashed" : "doodle-stroke");
-      path.style.strokeWidth = `${spec.strokeWidth.toFixed(1)}px`;
+      path.style.strokeWidth = isGiant
+        ? `${Math.max(1.4, spec.strokeWidth * 0.55).toFixed(1)}px`
+        : `${spec.strokeWidth.toFixed(1)}px`;
       if (isLive) {
         path.style.animationDuration = `${(700 + Math.random() * 600).toFixed(0)}ms`;
       }
-      g.appendChild(path);
+      inner.appendChild(path);
     }
 
+    g.appendChild(inner);
+    svg.appendChild(g);
+  }
+
+  function spawnStickerOrStamp(svg, x, y, isSticker) {
+    const rot = (Math.random() * 44 - 22).toFixed(1);
+    const scale = (0.75 + Math.random() * 0.55).toFixed(2);
+    const g = document.createElementNS(SVG_NS, "g");
+    const shiftDur = (520 + Math.random() * 240).toFixed(0);
+    const shiftDelay = (-Math.random() * 600).toFixed(0);
+
+    g.setAttribute("transform", `translate(${x.toFixed(1)} ${y.toFixed(1)}) rotate(${rot}) scale(${scale})`);
+    g.setAttribute("class", isSticker ? "doodle-group doodle-sticker" : "doodle-group doodle-stamp");
+
+    const inner = document.createElementNS(SVG_NS, "g");
+    inner.setAttribute("class", "doodle-shift");
+    inner.style.animationDuration = `${shiftDur}ms`;
+    inner.style.animationDelay = `${shiftDelay}ms`;
+
+    if (isSticker) {
+      inner.innerHTML = STICKERS[Math.floor(Math.random() * STICKERS.length)]();
+    } else {
+      const stamp = STAMPS[Math.floor(Math.random() * STAMPS.length)]();
+      g.style.color = stamp.color;
+      inner.innerHTML = stamp.svg;
+    }
+
+    g.appendChild(inner);
     svg.appendChild(g);
   }
 
   function appendBand(svg, bandIndex) {
     const vw = document.documentElement.clientWidth || window.innerWidth || 1200;
-    const count = vw < 640 ? 5 : 8;
-    const yStart = bandIndex * BAND_HEIGHT + 36;
+    const count = vw < 640 ? 4 : 7;
+    const yMin = bandIndex * BAND_HEIGHT + 34;
+    const yMax = yMin + BAND_HEIGHT - 56;
+    const minDist = vw < 640 ? 92 : 108;
 
     for (let i = 0; i < count; i++) {
-      const x = pickX(vw, i + bandIndex);
-      const y = yStart + Math.random() * (BAND_HEIGHT - 60);
-      spawnDoodle(svg, x, y, false);
+      const { x, y } = pickBlueNoisePoint(vw, yMin, yMax, minDist, i + bandIndex);
+      placedPoints.push({ x, y });
+
+      const roll = Math.random();
+      if (roll < 0.16) {
+        spawnStickerOrStamp(svg, x, y, true);
+      } else if (roll < 0.28) {
+        spawnStickerOrStamp(svg, x, y, false);
+      } else {
+        spawnDoodle(svg, x, y, false, false);
+      }
+    }
+
+    // Occasionally spawn one oversized half-page doodle (every ~5 scroll bands)
+    if (bandIndex % 5 === 2) {
+      const gx = vw * (0.22 + Math.random() * 0.56);
+      const gy = yMin + BAND_HEIGHT * 0.45;
+      const giantTooClose = placedGiants.some((p) => Math.hypot(gx - p.x, gy - p.y) < 360);
+      if (!giantTooClose) {
+        placedGiants.push({ x: gx, y: gy });
+        spawnDoodle(svg, gx, gy, false, true);
+      }
     }
   }
 
@@ -252,8 +445,10 @@
     const scrollY = window.scrollY || 0;
     const maxH = parseFloat(svg.style.height || String(vh));
 
-    const x = pickX(vw, liveCount);
-    const y = Math.min(maxH - 40, scrollY + 70 + Math.random() * Math.max(180, vh - 120));
+    const yMin = scrollY + 70;
+    const yMax = Math.min(maxH - 40, scrollY + Math.max(250, vh - 60));
+    const { x, y } = pickBlueNoisePoint(vw, yMin, Math.max(yMin + 40, yMax), 96, liveCount, 10);
+    placedPoints.push({ x, y });
 
     spawnDoodle(svg, x, y, true);
     liveCount++;
@@ -270,6 +465,39 @@
     requestAnimationFrame(syncDoodles);
   }
 
+  function rotateShiftingDoodles() {
+    if (!document.hidden && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      const svg = createLayer();
+      const all = Array.from(svg.querySelectorAll(".doodle-group"));
+      for (const el of all) {
+        if (el.classList.contains("is-shifting") && Math.random() < 0.7) {
+          el.classList.remove("is-shifting");
+        }
+      }
+
+      const scrollY = window.scrollY || 0;
+      const vh = window.innerHeight || 800;
+      const bandTop = scrollY - BAND_HEIGHT;
+      const bandBottom = scrollY + vh + BAND_HEIGHT;
+
+      const nearby = all.filter((el) => {
+        const m = /translate\([^ ]+ ([^)]+)\)/.exec(el.getAttribute("transform") || "");
+        if (!m) return false;
+        const y = parseFloat(m[1]);
+        return y >= bandTop && y <= bandBottom;
+      });
+
+      const pool = nearby.length > 0 ? nearby : all;
+      const targetCount = Math.min(8, Math.max(2, Math.round(pool.length * 0.2)));
+      for (let i = 0; i < targetCount; i++) {
+        const pick = pool[Math.floor(Math.random() * pool.length)];
+        if (pick) pick.classList.add("is-shifting");
+      }
+    }
+
+    setTimeout(rotateShiftingDoodles, 1800 + Math.random() * 1800);
+  }
+
   function init() {
     syncDoodles();
     window.addEventListener("scroll", scheduleSync, { passive: true });
@@ -281,6 +509,7 @@
     }
 
     setInterval(spawnLiveDoodle, 2100);
+    setTimeout(rotateShiftingDoodles, 900);
   }
 
   if (document.readyState === "loading") {

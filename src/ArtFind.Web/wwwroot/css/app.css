@@ -1,9 +1,9 @@
 :root {
-  /* Hand-drawn & Sketchy: warm toned sketchbook paper (never near-white) */
-  --bg: oklch(0.915 0.032 82);
-  --surface: oklch(0.88 0.034 80);
-  --surface-raised: oklch(0.958 0.018 85);
-  --surface-muted: oklch(0.845 0.032 80);
+  /* Hand-drawn & Sketchy: warm cotton sketchbook paper */
+  --bg: oklch(0.942 0.018 84);
+  --surface: oklch(0.905 0.02 82);
+  --surface-raised: oklch(0.974 0.011 86);
+  --surface-muted: oklch(0.875 0.022 82);
   --ink: oklch(0.2 0.018 55);
   --ink-secondary: oklch(0.38 0.015 55);
   --ink-muted: oklch(0.5 0.012 55);
@@ -46,13 +46,26 @@ body {
   padding: 0;
   overflow-x: clip;
   background-color: var(--bg);
-  background-image: radial-gradient(oklch(0.2 0.018 55 / 0.12) 1px, transparent 0);
-  background-size: 24px 24px;
+  background-image:
+    radial-gradient(120% 80% at 15% 10%, oklch(0.97 0.012 88 / 0.55), transparent 60%),
+    radial-gradient(100% 90% at 85% 90%, oklch(0.89 0.026 78 / 0.45), transparent 65%);
   color: var(--ink);
   font-family: "DM Sans", -apple-system, BlinkMacSystemFont, sans-serif;
   -webkit-font-smoothing: antialiased;
   line-height: 1.5;
   overscroll-behavior: none;
+}
+
+/* Tactile cotton sketchbook paper fiber grain */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.075;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 220 220' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='p'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0.25'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23p)'/%3E%3C/svg%3E");
 }
 
 a {
@@ -145,13 +158,64 @@ textarea {
   stroke-dasharray: 6 6;
 }
 
+.doodle-giant {
+  opacity: 0.42;
+}
+
+.doodle-shift {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.doodle-sticker {
+  opacity: 0.68;
+  filter: drop-shadow(1.5px 2.5px 0 oklch(0.2 0.018 55 / 0.22));
+}
+
+.sticker-diecut {
+  paint-order: stroke;
+}
+
+.stamp-text {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  fill: currentColor;
+}
+
+.stamp-text-sm {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 8.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  fill: currentColor;
+}
+
 .bar {
   position: sticky;
   top: 0;
   z-index: 40;
-  background: var(--bg);
-  border-bottom: 2px solid var(--ink);
+  background-color: oklch(0.925 0.02 83);
+  background-image:
+    linear-gradient(125deg, oklch(0.98 0.01 86 / 0.42) 0%, transparent 32%, oklch(0.84 0.025 80 / 0.28) 54%, transparent 78%, oklch(0.97 0.012 86 / 0.35) 100%),
+    url("data:image/svg+xml,%3Csvg viewBox='0 0 240 120' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='c'%3E%3CfeTurbulence type='turbulence' baseFrequency='0.035' numOctaves='4' seed='7'/%3E%3CfeDiffuseLighting in='noise' lighting-color='%23f6efe2' surfaceScale='2.4'%3E%3CfeDistantLight azimuth='55' elevation='52'/%3E%3C/feDiffuseLighting%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23c)' opacity='0.28'/%3E%3C/svg%3E");
   padding-top: env(safe-area-inset-top);
+  filter: drop-shadow(0 3px 4px oklch(0.2 0.018 55 / 0.12));
+}
+
+/* Non-repeating organic torn-paper edge along the bottom of the sticky nav */
+.bar::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 100%;
+  height: 14px;
+  pointer-events: none;
+  background-repeat: no-repeat;
+  background-size: 100% 14px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1600 14' preserveAspectRatio='none'%3E%3Cpath d='M0 0 L1600 0 L1600 4 L1548 7 L1512 3 L1466 5 L1431 11 L1384 6 L1338 8 L1292 2 L1247 5 L1214 10 L1162 4 L1115 6 L1068 3 L1033 9 L982 5 L936 12 L884 7 L841 4 L792 8 L748 3 L695 6 L651 11 L602 4 L558 7 L512 2 L468 9 L419 5 L374 11 L321 4 L276 7 L228 3 L184 10 L132 5 L86 8 L39 3 L0 6 Z' fill='%23ede3cf'/%3E%3C/svg%3E");
 }
 
 .bar-in {
@@ -1021,10 +1085,21 @@ textarea {
 @keyframes imgFade { from { opacity: 0.35; } to { opacity: 1; } }
 @keyframes drawSquiggle { from { stroke-dashoffset: 260; } to { stroke-dashoffset: 0; } }
 @keyframes drawDoodle { from { stroke-dashoffset: 220; opacity: 0; } to { stroke-dashoffset: 0; opacity: 1; } }
+@keyframes sketchShift {
+  0%   { transform: translate(0px, 0px) rotate(0deg); }
+  25%  { transform: translate(0.8px, -0.6px) rotate(0.45deg); }
+  50%  { transform: translate(-0.7px, 0.7px) rotate(-0.4deg); }
+  75%  { transform: translate(0.5px, 0.4px) rotate(0.25deg); }
+  100% { transform: translate(0px, 0px) rotate(0deg); }
+}
 
 @media (prefers-reduced-motion: no-preference) {
   .hero-squiggle path {
     animation: drawSquiggle 520ms var(--ease-out) 120ms both;
+  }
+
+  .doodle-group.is-shifting .doodle-shift {
+    animation: sketchShift 580ms steps(1, end) infinite;
   }
 
   .doodle-stroke:not(.doodle-dashed) {
