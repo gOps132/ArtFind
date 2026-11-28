@@ -296,6 +296,39 @@
     requestAnimationFrame(syncDoodles);
   }
 
+  function rotateShiftingDoodles() {
+    if (!document.hidden && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      const svg = createLayer();
+      const all = Array.from(svg.querySelectorAll(".doodle-group"));
+      for (const el of all) {
+        if (el.classList.contains("is-shifting") && Math.random() < 0.7) {
+          el.classList.remove("is-shifting");
+        }
+      }
+
+      const scrollY = window.scrollY || 0;
+      const vh = window.innerHeight || 800;
+      const bandTop = scrollY - BAND_HEIGHT;
+      const bandBottom = scrollY + vh + BAND_HEIGHT;
+
+      const nearby = all.filter((el) => {
+        const m = /translate\([^ ]+ ([^)]+)\)/.exec(el.getAttribute("transform") || "");
+        if (!m) return false;
+        const y = parseFloat(m[1]);
+        return y >= bandTop && y <= bandBottom;
+      });
+
+      const pool = nearby.length > 0 ? nearby : all;
+      const targetCount = Math.min(8, Math.max(2, Math.round(pool.length * 0.2)));
+      for (let i = 0; i < targetCount; i++) {
+        const pick = pool[Math.floor(Math.random() * pool.length)];
+        if (pick) pick.classList.add("is-shifting");
+      }
+    }
+
+    setTimeout(rotateShiftingDoodles, 1800 + Math.random() * 1800);
+  }
+
   function init() {
     syncDoodles();
     window.addEventListener("scroll", scheduleSync, { passive: true });
@@ -307,6 +340,7 @@
     }
 
     setInterval(spawnLiveDoodle, 2100);
+    setTimeout(rotateShiftingDoodles, 900);
   }
 
   if (document.readyState === "loading") {

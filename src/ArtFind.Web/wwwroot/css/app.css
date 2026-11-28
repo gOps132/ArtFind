@@ -1043,7 +1043,7 @@ textarea {
     animation: drawSquiggle 520ms var(--ease-out) 120ms both;
   }
 
-  .doodle-shift {
+  .doodle-group.is-shifting .doodle-shift {
     animation: sketchShift 580ms steps(1, end) infinite;
   }
 
