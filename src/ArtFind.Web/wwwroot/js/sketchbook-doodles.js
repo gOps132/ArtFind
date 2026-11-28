@@ -616,6 +616,13 @@
   }
 
   function resetFooterPaths(cache) {
+    const footer = cache.svg.closest(".footer");
+    const sheet = cache.svg.closest(".footer-sheet");
+    if (footer) footer.classList.remove("is-ripping");
+    if (sheet) {
+      sheet.style.transform = "";
+      sheet.style.opacity = "";
+    }
     for (const it of cache.mainItems) {
       it.path.style.strokeDashoffset = `${it.len.toFixed(2)}`;
       it.path.style.fillOpacity = "0";
@@ -681,27 +688,53 @@
       lastPt = targets[0].startPt;
     }
 
+    function pushRip(ms) {
+      steps.push({ kind: "rip", startMs: cursor, endMs: cursor + ms });
+      cursor += ms;
+      lastPt = A.startPt;
+    }
+
+    const canErase = style.tool === "crayon" || style.tool === "pencil";
+
     if (key === "artFnd") {
       const nTypo = appendExtraPath(cache.typoGroup, n.path.getAttribute("d"), -advs[4]);
       const dTypo = appendExtraPath(cache.typoGroup, d.path.getAttribute("d"), -advs[4]);
       [A, r, t, F, nTypo, dTypo].forEach((it) => pushDraw(it));
       pushPause(380);
-      pushErase([nTypo, dTypo], 700);
-      [i, n, d].forEach((it) => pushDraw(it, 0.92));
+      if (canErase) {
+        pushErase([nTypo, dTypo], 700);
+        [i, n, d].forEach((it) => pushDraw(it, 0.92));
+      } else {
+        pushRip(720);
+        pushPause(140);
+        [A, r, t, F, i, n, d].forEach((it) => pushDraw(it, 0.9));
+      }
     } else if (key === "artFined") {
       const eTypo = appendExtraPath(cache.typoGroup, ePath, eX);
       const dTypo = appendExtraPath(cache.typoGroup, d.path.getAttribute("d"), eAdv);
       [A, r, t, F, i, n, eTypo, dTypo].forEach((it) => pushDraw(it));
       pushPause(380);
-      pushErase([eTypo, dTypo], 720);
-      pushDraw(d, 0.92);
+      if (canErase) {
+        pushErase([eTypo, dTypo], 720);
+        pushDraw(d, 0.92);
+      } else {
+        pushRip(720);
+        pushPause(140);
+        [A, r, t, F, i, n, d].forEach((it) => pushDraw(it, 0.9));
+      }
     } else if (key === "atrFind") {
       const tTypo = appendExtraPath(cache.typoGroup, t.path.getAttribute("d"), -advs[1]);
       const rTypo = appendExtraPath(cache.typoGroup, r.path.getAttribute("d"), advs[2]);
       [A, tTypo, rTypo].forEach((it) => pushDraw(it));
       pushPause(340);
-      pushErase([tTypo, rTypo], 640);
-      [r, t, F, i, n, d].forEach((it) => pushDraw(it, 0.95));
+      if (canErase) {
+        pushErase([tTypo, rTypo], 640);
+        [r, t, F, i, n, d].forEach((it) => pushDraw(it, 0.95));
+      } else {
+        pushRip(720);
+        pushPause(140);
+        [A, r, t, F, i, n, d].forEach((it) => pushDraw(it, 0.9));
+      }
     } else {
       const star = appendExtraPath(cache.flourishGroup, STAR_PATH, 0);
       const swoosh = appendExtraPath(cache.flourishGroup, SWOOSH_PATH, 0);
@@ -715,12 +748,33 @@
   }
 
   function renderFooterTimeline(cache, timeline, elapsedMs) {
+    const footer = cache.svg.closest(".footer");
+    const sheet = cache.svg.closest(".footer-sheet");
     let tipPoint = cache.mainItems[0].startPt;
     let usingEraser = false;
+    let isRipping = false;
     let eraserPoint = tipPoint;
     const maxFill = cache.maxFill ?? 1.0;
 
-    for (const step of timeline.steps) {
+    let startIdx = 0;
+    for (let s = 0; s < timeline.steps.length; s++) {
+      if (timeline.steps[s].kind === "rip" && elapsedMs >= timeline.steps[s].endMs) {
+        startIdx = s + 1;
+      }
+    }
+
+    if (startIdx > 0) {
+      for (const it of cache.mainItems) {
+        it.path.style.strokeDashoffset = `${it.len.toFixed(2)}`;
+        it.path.style.fillOpacity = "0";
+      }
+      for (const p of cache.typoGroup.children) {
+        p.style.opacity = "0";
+      }
+    }
+
+    for (let s = startIdx; s < timeline.steps.length; s++) {
+      const step = timeline.steps[s];
       if (elapsedMs < step.startMs) break;
 
       if (step.kind === "draw") {
@@ -791,6 +845,28 @@
             }
           }
         }
+      } else if (step.kind === "rip") {
+        if (elapsedMs < step.endMs) {
+          isRipping = true;
+          const localT = (elapsedMs - step.startMs) / (step.endMs - step.startMs);
+          const eased = localT * localT;
+          if (footer) footer.classList.add("is-ripping");
+          if (sheet) {
+            const tx = eased * 44;
+            const ty = eased * 240;
+            const rot = -eased * 13;
+            sheet.style.transform = `translate3d(${tx.toFixed(1)}px, ${ty.toFixed(1)}px, 0) rotate(${rot.toFixed(2)}deg)`;
+            sheet.style.opacity = Math.max(0, 1 - Math.max(0, (localT - 0.35) / 0.65)).toFixed(2);
+          }
+        }
+      }
+    }
+
+    if (!isRipping) {
+      if (footer) footer.classList.remove("is-ripping");
+      if (sheet) {
+        sheet.style.transform = "";
+        sheet.style.opacity = "";
       }
     }
 

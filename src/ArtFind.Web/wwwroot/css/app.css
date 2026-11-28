@@ -1426,7 +1426,8 @@ textarea {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1600 14' preserveAspectRatio='none'%3E%3Cpath d='M0 14 L1600 14 L1600 10 L1548 7 L1512 11 L1466 9 L1431 3 L1384 8 L1338 6 L1292 12 L1247 9 L1214 4 L1162 10 L1115 8 L1068 11 L1033 5 L982 9 L936 2 L884 7 L841 10 L792 6 L748 11 L695 8 L651 3 L602 10 L558 7 L512 12 L468 5 L419 9 L374 3 L321 10 L276 7 L228 11 L184 4 L132 9 L86 6 L39 11 L0 8 Z' fill='%23ebe0ca'/%3E%3C/svg%3E");
 }
 
-.footer-sheet {
+.footer-sheet,
+.footer-sheet-under {
   position: relative;
   overflow: hidden;
   background-color: oklch(0.925 0.02 83);
@@ -1438,7 +1439,24 @@ textarea {
   will-change: transform;
 }
 
-.footer-sheet::before {
+.footer-sheet {
+  z-index: 1;
+}
+
+.footer-sheet-under {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.footer.is-ripping .footer-sheet-under {
+  opacity: 1;
+}
+
+.footer-sheet::before,
+.footer-sheet-under::before {
   content: "";
   position: absolute;
   inset: 0;
