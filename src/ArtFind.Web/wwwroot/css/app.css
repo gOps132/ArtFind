@@ -383,6 +383,8 @@ textarea {
   gap: 6px;
   overflow-x: auto;
   scrollbar-width: none;
+  -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 28px), transparent);
+  mask-image: linear-gradient(90deg, #000 calc(100% - 28px), transparent);
 }
 
 .navrow::-webkit-scrollbar {
@@ -557,11 +559,11 @@ textarea {
 }
 
 .tag-browser-wrap {
-  perspective: 1100px;
   overflow: hidden;
   max-width: 1280px;
   margin: 0 auto;
   max-height: calc((1 - var(--fold, 0)) * 420px);
+  opacity: calc(1 - var(--fold, 0));
   padding: 0 max(24px, env(safe-area-inset-right)) calc((1 - var(--fold, 0)) * 14px) max(24px, env(safe-area-inset-left));
 }
 
@@ -571,10 +573,6 @@ textarea {
 
 .tag-browser-clip {
   position: relative;
-  transform-origin: top center;
-  transform: rotateX(calc(var(--fold, 0) * -84deg));
-  backface-visibility: hidden;
-  will-change: transform;
 }
 
 @media (prefers-reduced-motion: reduce) {
