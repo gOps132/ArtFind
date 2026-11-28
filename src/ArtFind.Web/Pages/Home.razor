@@ -3,6 +3,7 @@
 @inject CommissionMatcher Matcher
 
 <header class="bar">
+    <div class="bar-paper-clip" aria-hidden="true"></div>
     <div class="bar-in">
         <a href="/" class="brand" @onclick="ResetFilters" @onclick:preventDefault="true">ArtFind</a>
 
@@ -49,14 +50,11 @@
             </button>
         }
 
-        @if (AvailableStyles.Count > 10)
-        {
-            <button type="button"
-                    class="chip @(_showTagBrowser ? "on" : "")"
-                    @onclick="() => _showTagBrowser = !_showTagBrowser">
-                @(_showTagBrowser ? "Less" : $"+{TotalTagCount} tags")
-            </button>
-        }
+        <button type="button"
+                class="chip @(_showTagBrowser ? "on" : "")"
+                @onclick="() => _showTagBrowser = !_showTagBrowser">
+            @(_showTagBrowser ? "Hide Tags" : $"All Tags ({TotalTagCount})")
+        </button>
 
         <span class="filter-sep" aria-hidden="true"></span>
 
@@ -142,39 +140,19 @@
 
         <div class="bar-landing" aria-label="About ArtFind">
             <div class="bar-landing-inner">
-                <div class="bar-landing-grid">
-                    <div class="hero">
-                        <h1 class="hero-title">
-                            Find an illustrator
-                            <span class="hero-highlight">
-                                open for work
-                                <svg class="hero-squiggle" viewBox="0 0 240 16" fill="none" preserveAspectRatio="none" aria-hidden="true">
-                                    <path d="M3 10.5C38 4.5 72 13.5 112 7.5C152 1.5 196 12.5 237 6" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" />
-                                </svg>
-                            </span>
-                        </h1>
-                        <p class="hero-subtitle">
-                            Browse public illustrators and digital artists currently accepting commissions. Filter by brief, style, or budget, then jump straight to their Artist Page.
-                        </p>
-                    </div>
-
-                    <div class="landing-notes">
-                        <div class="landing-note">
-                            <span class="note-kicker mono">01 · DIRECT</span>
-                            <span>Links straight to VGen, Carrd, Ko-fi, Artistree, or Bluesky with zero fees.</span>
-                        </div>
-                        <div class="landing-note">
-                            <span class="note-kicker mono">02 · VERIFIED</span>
-                            <span>Indexed from public <code>#commissionsopen</code> posts and artist bios.</span>
-                        </div>
-                        <div class="landing-note">
-                            <span class="note-kicker mono">03 · RESPECTFUL</span>
-                            <span>No full-res re-hosting. Artists can opt out anytime with <code>#noartfind</code>.</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="landing-scroll-cue mono" aria-hidden="true">
-                    ↓ Scroll down to browse the gallery
+                <div class="hero">
+                    <h1 class="hero-title">
+                        Find an illustrator
+                        <span class="hero-highlight">
+                            open for work
+                            <svg class="hero-squiggle" viewBox="0 0 240 16" fill="none" preserveAspectRatio="none" aria-hidden="true">
+                                <path d="M3 10.5C38 4.5 72 13.5 112 7.5C152 1.5 196 12.5 237 6" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" />
+                            </svg>
+                        </span>
+                    </h1>
+                    <p class="hero-subtitle">
+                        Browse by category or style, then go directly to the Artist Page.
+                    </p>
                 </div>
             </div>
         </div>
