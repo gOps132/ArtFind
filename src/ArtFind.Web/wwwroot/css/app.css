@@ -44,7 +44,9 @@ html,
 body {
   margin: 0;
   padding: 0;
-  background: var(--bg);
+  background-color: var(--bg);
+  background-image: radial-gradient(oklch(0.2 0.018 55 / 0.07) 1px, transparent 0);
+  background-size: 24px 24px;
   color: var(--ink);
   font-family: "DM Sans", -apple-system, BlinkMacSystemFont, sans-serif;
   -webkit-font-smoothing: antialiased;
@@ -434,23 +436,50 @@ textarea {
 
 .hero {
   max-width: 68ch;
-  margin-bottom: 22px;
+  margin-bottom: 24px;
+}
+
+.hero-tag {
+  display: inline-block;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: var(--accent);
+  background: var(--accent-soft);
+  border: 1.5px solid var(--accent);
+  border-radius: var(--radius-sketch-sm);
+  padding: 2px 8px;
+  margin-bottom: 10px;
 }
 
 .hero-title {
   font-family: "Architects Daughter", cursive, sans-serif;
-  font-size: 2.25rem;
-  line-height: 1.15;
+  font-size: 2.3rem;
+  line-height: 1.18;
   font-weight: 400;
-  margin: 0 0 6px;
+  margin: 0 0 8px;
 }
 
-.hero-title em {
-  font-style: normal;
+.hero-highlight {
+  position: relative;
+  display: inline-block;
   color: var(--accent);
-  text-decoration: underline;
-  text-decoration-style: wavy;
-  text-underline-offset: 4px;
+}
+
+.hero-squiggle {
+  position: absolute;
+  left: -2px;
+  right: -2px;
+  bottom: -6px;
+  width: calc(100% + 4px);
+  height: 12px;
+  color: var(--accent);
+  pointer-events: none;
+}
+
+.hero-squiggle path {
+  stroke-dasharray: 260;
+  stroke-dashoffset: 0;
 }
 
 .hero-subtitle {
@@ -506,6 +535,17 @@ textarea {
   height: 100%;
   object-fit: cover;
   display: block;
+  transition: transform 260ms var(--ease-out);
+}
+
+.card-img-fade {
+  animation: imgFade 160ms var(--ease-out) both;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .artist-card:hover .card-media img {
+    transform: scale(1.03);
+  }
 }
 
 .media-badge-row {
@@ -797,6 +837,47 @@ textarea {
   gap: 10px;
 }
 
+.sheet-action-row {
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+}
+
+.copy-btn {
+  flex: none;
+  min-width: 96px;
+}
+
+.copy-icon-wrap {
+  position: relative;
+  width: 16px;
+  height: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.copy-icon {
+  position: absolute;
+  inset: 0;
+  transition:
+    opacity 300ms cubic-bezier(0.2, 0, 0, 1),
+    transform 300ms cubic-bezier(0.2, 0, 0, 1),
+    filter 300ms cubic-bezier(0.2, 0, 0, 1);
+}
+
+.copy-icon.is-visible {
+  opacity: 1;
+  transform: scale(1);
+  filter: blur(0);
+}
+
+.copy-icon.is-hidden {
+  opacity: 0;
+  transform: scale(0.25);
+  filter: blur(4px);
+}
+
 .modal-card {
   width: min(460px, 100%);
   background: var(--surface-raised);
@@ -872,6 +953,11 @@ textarea {
   border-radius: var(--radius-sketch);
 }
 
+.empty-doodle {
+  color: var(--accent);
+  margin-bottom: 12px;
+}
+
 .empty-title {
   margin: 0 0 8px;
   font-family: "Architects Daughter", cursive, sans-serif;
@@ -916,8 +1002,28 @@ textarea {
 @keyframes modalEnter { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: scale(1); } }
 @keyframes modalExit { from { opacity: 1; transform: scale(1); } to { opacity: 0; transform: scale(0.96); } }
 
+@keyframes imgFade { from { opacity: 0.35; } to { opacity: 1; } }
+@keyframes drawSquiggle { from { stroke-dashoffset: 260; } to { stroke-dashoffset: 0; } }
+
+@media (prefers-reduced-motion: no-preference) {
+  .hero-squiggle path {
+    animation: drawSquiggle 520ms var(--ease-out) 120ms both;
+  }
+
+  .skeleton-media,
+  .skeleton-line {
+    animation: pulseSoft 1.4s ease-in-out infinite;
+  }
+
+  @keyframes pulseSoft {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .btn, .chip, .nav-pill, .artist-card { transition-duration: 0.01ms !important; }
+  .btn, .chip, .nav-pill, .artist-card, .card-media img, .copy-icon { transition-duration: 0.01ms !important; }
+  .hero-squiggle path { animation: none; stroke-dashoffset: 0; }
 }
 
 @media (pointer: coarse) {

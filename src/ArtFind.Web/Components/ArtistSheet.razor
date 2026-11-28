@@ -1,3 +1,4 @@
+@inject IJSRuntime JS
 @if (Match is not null)
 {
     var artist = Match.Artist;
@@ -47,7 +48,9 @@
                    target="_blank"
                    rel="noopener noreferrer"
                    title="Open original artwork post">
-                    <img src="@activePreview.ThumbnailUrl"
+                    <img @key="activePreview.ThumbnailUrl"
+                         class="card-img-fade"
+                         src="@activePreview.ThumbnailUrl"
                          alt="@(string.IsNullOrWhiteSpace(activePreview.AltText) ? artist.DisplayName : activePreview.AltText)" />
                 </a>
 
@@ -86,13 +89,30 @@
             }
 
             <div class="sheet-actions">
-                <a class="btn btn-accent btn-lg"
-                   href="@artist.ArtistPageUrl"
-                   target="_blank"
-                   rel="noopener noreferrer">
-                    <span>Open Artist Page (@artist.ArtistPageType)</span>
-                    <span aria-hidden="true">↗</span>
-                </a>
+                <div class="sheet-action-row">
+                    <a class="btn btn-accent btn-lg cta-link"
+                       href="@artist.ArtistPageUrl"
+                       target="_blank"
+                       rel="noopener noreferrer">
+                        <span>Open Artist Page (@artist.ArtistPageType)</span>
+                        <span aria-hidden="true">↗</span>
+                    </a>
+                    <button type="button"
+                            class="btn btn-ghost btn-lg copy-btn"
+                            @onclick="() => CopyUrlAsync(artist.ArtistPageUrl)"
+                            aria-label="Copy Artist Page link">
+                        <span class="copy-icon-wrap" aria-hidden="true">
+                            <svg class="copy-icon @(_copied ? "is-hidden" : "is-visible")" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                            </svg>
+                            <svg class="copy-icon @(_copied ? "is-visible" : "is-hidden")" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg>
+                        </span>
+                        <span>@(_copied ? "Copied" : "Copy")</span>
+                    </button>
+                </div>
 
                 @if (artist.PrimarySource is not null)
                 {
@@ -116,6 +136,7 @@
     private int _selectedPreviewIndex;
     private string? _lastArtistId;
     private bool _closing;
+    private bool _copied;
 
     protected override void OnParametersSet()
     {
@@ -125,6 +146,23 @@
             _lastArtistId = currentId;
             _selectedPreviewIndex = 0;
             _closing = false;
+            _copied = false;
+        }
+    }
+
+    private async Task CopyUrlAsync(string url)
+    {
+        try
+        {
+            await JS.InvokeVoidAsync("navigator.clipboard.writeText", url);
+            _copied = true;
+            StateHasChanged();
+            await Task.Delay(1600);
+            _copied = false;
+        }
+        catch
+        {
+            // Clipboard API may be unavailable in restricted contexts.
         }
     }
 

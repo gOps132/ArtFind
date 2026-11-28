@@ -143,8 +143,15 @@
 
 <main class="container">
     <section class="hero">
+        <div class="hero-tag mono">SKETCHBOOK INDEX</div>
         <h1 class="hero-title">
-            Find an illustrator <em>open for work</em>
+            Find an illustrator
+            <span class="hero-highlight">
+                open for work
+                <svg class="hero-squiggle" viewBox="0 0 240 16" fill="none" preserveAspectRatio="none" aria-hidden="true">
+                    <path d="M3 10.5C38 4.5 72 13.5 112 7.5C152 1.5 196 12.5 237 6" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" />
+                </svg>
+            </span>
         </h1>
         <p class="hero-subtitle">
             Browse by category or style, then go directly to the Artist Page.
@@ -183,6 +190,11 @@
     else if (Matches.Count == 0)
     {
         <div class="empty-state">
+            <svg class="empty-doodle" width="56" height="56" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M14 50L22 28L46 8L56 18L36 42L14 50Z" />
+                <path d="M22 28L36 42" />
+                <path d="M10 56C18 52 28 56 38 52" />
+            </svg>
             <h2 class="empty-title">No matching open artists</h2>
             <p class="empty-copy">
                 Try broadening your Commission Brief or clearing one of the active filters.
