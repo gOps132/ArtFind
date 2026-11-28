@@ -628,130 +628,17 @@
   }
 
   let sharedAudioCtx = null;
-  let activeToolAudio = null;
-
-  function getRunningAudioCtx() {
-    const AudioCtx = window.AudioContext || window.webkitAudioContext;
-    if (!AudioCtx) return null;
-    if (!sharedAudioCtx) sharedAudioCtx = new AudioCtx();
-    if (sharedAudioCtx.state === "suspended") {
-      sharedAudioCtx.resume().catch(() => {});
-    }
-    return sharedAudioCtx.state === "running" ? sharedAudioCtx : null;
-  }
 
   function unlockAudio() {
     try {
-      getRunningAudioCtx();
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtx) return;
+      if (!sharedAudioCtx) sharedAudioCtx = new AudioCtx();
+      if (sharedAudioCtx.state === "suspended") {
+        sharedAudioCtx.resume().catch(() => {});
+      }
     } catch {
       // Ignore audio errors when blocked
-    }
-  }
-
-  function ensureToolAudio(ctx) {
-    if (activeToolAudio && activeToolAudio.ctx === ctx) return activeToolAudio;
-
-    // Warm pink-tinted noise (zero periodic buzz, soft paper-glide texture)
-    const length = Math.floor(ctx.sampleRate * 2.0);
-    const buffer = ctx.createBuffer(1, length, ctx.sampleRate);
-    const data = buffer.getChannelData(0);
-    let b0 = 0;
-    let b1 = 0;
-    let b2 = 0;
-    for (let i = 0; i < length; i++) {
-      const white = Math.random() * 2 - 1;
-      b0 = 0.997 * b0 + white * 0.029;
-      b1 = 0.985 * b1 + white * 0.032;
-      b2 = 0.950 * b2 + white * 0.048;
-      data[i] = Math.max(-1, Math.min(1, (b0 + b1 + b2 + white * 0.08) * 1.6));
-    }
-
-    const src = ctx.createBufferSource();
-    src.buffer = buffer;
-    src.loop = true;
-
-    const bandpass = ctx.createBiquadFilter();
-    bandpass.type = "bandpass";
-    bandpass.frequency.value = 1200;
-    bandpass.Q.value = 0.85;
-
-    const lowpass = ctx.createBiquadFilter();
-    lowpass.type = "lowpass";
-    lowpass.frequency.value = 2400;
-
-    const gain = ctx.createGain();
-    gain.gain.value = 0.0001;
-
-    src.connect(bandpass);
-    bandpass.connect(lowpass);
-    lowpass.connect(gain);
-    gain.connect(ctx.destination);
-    src.start();
-
-    activeToolAudio = { ctx, src, filter: bandpass, lowpass, gain };
-    return activeToolAudio;
-  }
-
-  function updateToolAudio(mode, tool, intensity = 1) {
-    try {
-      const ctx = getRunningAudioCtx();
-      if (!ctx) return;
-      const audio = ensureToolAudio(ctx);
-      const now = ctx.currentTime;
-
-      if (mode === "idle") {
-        audio.gain.gain.setTargetAtTime(0.0001, now, 0.045);
-        return;
-      }
-
-      if (mode === "erase") {
-        const scrubFreq = 580 + 260 * intensity;
-        audio.filter.frequency.setTargetAtTime(scrubFreq, now, 0.035);
-        audio.filter.Q.setTargetAtTime(0.8, now, 0.04);
-        audio.lowpass.frequency.setTargetAtTime(1500, now, 0.04);
-        audio.gain.gain.setTargetAtTime(Math.max(0.005, 0.065 * intensity), now, 0.03);
-        return;
-      }
-
-      // Smooth paper-glide acoustic profiles per writing tool
-      let freq = 1950;
-      let lpFreq = 3000;
-      let q = 0.95;
-      let baseGain = 0.036;
-      if (tool === "pencil") {
-        freq = 1350;
-        lpFreq = 2300;
-        q = 0.85;
-        baseGain = 0.048;
-      } else if (tool === "crayon") {
-        freq = 540;
-        lpFreq = 1350;
-        q = 0.75;
-        baseGain = 0.058;
-      } else if (tool === "brush") {
-        freq = 920;
-        lpFreq = 1750;
-        q = 0.65;
-        baseGain = 0.042;
-      }
-
-      const glideFreq = freq * (0.86 + 0.28 * intensity);
-      audio.filter.frequency.setTargetAtTime(glideFreq, now, 0.055);
-      audio.filter.Q.setTargetAtTime(q, now, 0.05);
-      audio.lowpass.frequency.setTargetAtTime(lpFreq, now, 0.05);
-      audio.gain.gain.setTargetAtTime(Math.max(0.004, baseGain * intensity), now, 0.045);
-    } catch {
-      // Ignore audio errors
-    }
-  }
-
-  function stopToolAudio() {
-    try {
-      if (!activeToolAudio) return;
-      const now = activeToolAudio.ctx.currentTime;
-      activeToolAudio.gain.gain.setTargetAtTime(0.0001, now, 0.02);
-    } catch {
-      // Ignore audio errors
     }
   }
 
@@ -815,7 +702,6 @@
   }
 
   function resetFooterPaths(cache) {
-    stopToolAudio();
     const footer = cache.svg.closest(".footer");
     const sheet = cache.svg.closest(".footer-sheet");
     if (footer) footer.classList.remove("is-ripping");
@@ -955,8 +841,6 @@
     let tipPoint = cache.mainItems[0].startPt;
     let usingEraser = false;
     let isRipping = false;
-    let audioMode = "idle";
-    let audioIntensity = 0;
     let eraserPoint = tipPoint;
     const maxFill = cache.maxFill ?? 1.0;
 
@@ -995,8 +879,6 @@
           step.item.path.style.fillOpacity = fillT.toFixed(2);
           const pt = step.item.path.getPointAtLength(drawn);
           tipPoint = { x: pt.x + step.item.dx, y: pt.y };
-          audioMode = "draw";
-          audioIntensity = 0.45 + 0.55 * Math.sin(localT * Math.PI);
         }
       } else if (step.kind === "move") {
         if (elapsedMs < step.endMs) {
@@ -1048,8 +930,6 @@
               const scrubX = Math.sin(localT * Math.PI * 10) * 12;
               const scrubY = Math.cos(localT * Math.PI * 10) * 4;
               eraserPoint = { x: pt.x + tgt.dx + scrubX, y: pt.y + scrubY };
-              audioMode = "erase";
-              audioIntensity = 0.25 + 0.75 * Math.abs(Math.sin(localT * Math.PI * 10));
             }
           }
         }
@@ -1112,12 +992,6 @@
         sheet.style.clipPath = "";
         sheet.style.filter = "";
       }
-    }
-
-    if (elapsedMs >= timeline.totalMs) {
-      stopToolAudio();
-    } else {
-      updateToolAudio(audioMode, cache.activeTool, audioIntensity);
     }
 
     if (usingEraser) {
@@ -1252,10 +1126,10 @@
     updateFooterWriting();
     window.addEventListener("scroll", scheduleSync, { passive: true });
     window.addEventListener("resize", scheduleSync, { passive: true });
-    window.addEventListener("pointerdown", unlockAudio, { passive: true, once: true });
-    window.addEventListener("wheel", unlockAudio, { passive: true, once: true });
-    window.addEventListener("touchstart", unlockAudio, { passive: true, once: true });
-    window.addEventListener("keydown", unlockAudio, { passive: true, once: true });
+    window.addEventListener("pointerdown", unlockAudio, { passive: true });
+    window.addEventListener("wheel", unlockAudio, { passive: true });
+    window.addEventListener("touchstart", unlockAudio, { passive: true });
+    window.addEventListener("keydown", unlockAudio, { passive: true });
 
     if (typeof ResizeObserver !== "undefined") {
       const ro = new ResizeObserver(scheduleSync);
