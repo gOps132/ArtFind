@@ -459,9 +459,26 @@
     }
   }
 
+  function syncHeaderSpacer() {
+    const bar = document.querySelector(".bar");
+    const shell = document.querySelector(".shell");
+    if (!bar || !shell) return;
+
+    // Measure unfolded header height at rest so fixed .bar never changes scrollHeight
+    const y = window.scrollY || 0;
+    if (y < 4) {
+      const h = bar.getBoundingClientRect().height;
+      if (h > 80) {
+        shell.style.setProperty("--bar-open-h", `${Math.ceil(h + 18)}px`);
+      }
+    }
+  }
+
   function syncHeaderState() {
     const bar = document.querySelector(".bar");
     if (!bar) return;
+
+    syncHeaderSpacer();
 
     const y = window.scrollY || 0;
     const hasTagBrowser = Boolean(bar.querySelector(".tag-browser-wrap"));
