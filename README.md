@@ -21,6 +21,17 @@ dotnet run --project src/ArtFind.Sync
 dotnet run --project src/ArtFind.Web
 ```
 
+## Mastodon pilot (local only)
+
+Pass a short, manually curated list of Artist profiles on their home instances. The pilot uses the public Mastodon API without credentials and writes a separate catalog snapshot; it does not change the default Bluesky sync or publish anything.
+
+```bash
+dotnet run --project src/ArtFind.Sync -- --mastodon-pilot /tmp/artfind-mastodon.json \
+  https://mastodon.art/@vetrinanicoleart https://mastodon.social/@Alphadonzer
+```
+
+Choose profiles with portfolio or commission links. The pilot checks the latest five non-reply, non-boost posts per profile, looks for an open-commission signal beyond hashtags alone, and requires a recent public image without a content warning or sensitive flag. It records source links, not proof of authorship. A failed API request aborts the run rather than replacing the snapshot with partial data.
+
 ## Migrating to Supabase
 
 1. Link your Supabase project and push the migration:
