@@ -112,10 +112,39 @@ textarea {
 }
 
 .shell {
+  position: relative;
+  z-index: 1;
   min-height: 100vh;
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
+}
+
+/* Scroll-reactive sketchbook doodle layer */
+.sketchbook-doodles {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.doodle-group {
+  color: oklch(0.2 0.018 55 / 0.14);
+}
+
+.doodle-ink-accent {
+  color: oklch(0.49 0.16 258 / 0.16);
+}
+
+.doodle-stroke {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .bar {
@@ -991,10 +1020,16 @@ textarea {
 
 @keyframes imgFade { from { opacity: 0.35; } to { opacity: 1; } }
 @keyframes drawSquiggle { from { stroke-dashoffset: 260; } to { stroke-dashoffset: 0; } }
+@keyframes drawDoodle { from { stroke-dashoffset: 220; opacity: 0; } to { stroke-dashoffset: 0; opacity: 1; } }
 
 @media (prefers-reduced-motion: no-preference) {
   .hero-squiggle path {
     animation: drawSquiggle 520ms var(--ease-out) 120ms both;
+  }
+
+  .doodle-stroke {
+    stroke-dasharray: 220;
+    animation: drawDoodle 650ms var(--ease-out) both;
   }
 
   .skeleton-media,
