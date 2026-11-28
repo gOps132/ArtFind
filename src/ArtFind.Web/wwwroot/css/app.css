@@ -515,9 +515,27 @@ textarea {
 }
 
 .tag-browser-wrap {
+  display: grid;
+  grid-template-rows: 1fr;
+  opacity: 1;
   max-width: 1280px;
   margin: 0 auto;
   padding: 0 max(24px, env(safe-area-inset-right)) 14px max(24px, env(safe-area-inset-left));
+  transition:
+    grid-template-rows 240ms var(--ease-out),
+    opacity 180ms var(--ease-out),
+    padding-bottom 240ms var(--ease-out);
+}
+
+.bar.is-compact .tag-browser-wrap {
+  grid-template-rows: 0fr;
+  opacity: 0;
+  padding-bottom: 0;
+  pointer-events: none;
+}
+
+.tag-browser-clip {
+  overflow: hidden;
 }
 
 .tag-browser {

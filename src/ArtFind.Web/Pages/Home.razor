@@ -85,7 +85,8 @@
         @if (_showTagBrowser)
         {
             <div class="tag-browser-wrap">
-                <div class="tag-browser" aria-label="Search all tags">
+                <div class="tag-browser-clip">
+                    <div class="tag-browser" aria-label="Search all tags">
                     <div class="tag-browser-header">
                         <input class="tag-search-input"
                                type="search"
@@ -134,6 +135,7 @@
                     {
                         <p class="tag-empty">No tags match "@_tagSearch".</p>
                     }
+                    </div>
                 </div>
             </div>
         }
