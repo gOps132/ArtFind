@@ -609,7 +609,18 @@
 
     for (const tName of ["fountain", "crayon", "brush", "pencil"]) {
       const g = cache.nib.querySelector(`.tool-${tName}`);
-      if (g) g.setAttribute("opacity", tName === style.tool ? "1" : "0");
+      if (g) {
+        g.setAttribute("opacity", tName === style.tool ? "1" : "0");
+        if (tName === "crayon") {
+          const img = g.querySelector(".footer-tool-img");
+          if (img) {
+            img.style.filter =
+              style.key === "crayon-cobalt"
+                ? "hue-rotate(205deg) saturate(1.1) drop-shadow(2px 4px 4px rgba(35, 25, 18, 0.28))"
+                : "";
+          }
+        }
+      }
     }
 
     return { advs, ePath, eX, eAdv };
