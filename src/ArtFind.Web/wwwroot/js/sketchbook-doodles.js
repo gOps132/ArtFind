@@ -459,7 +459,20 @@
     }
   }
 
+  function syncHeaderState() {
+    const bar = document.querySelector(".bar");
+    if (!bar) return;
+
+    const y = window.scrollY || 0;
+    if (y > 48) {
+      bar.classList.add("is-compact");
+    } else if (y < 16) {
+      bar.classList.remove("is-compact");
+    }
+  }
+
   function scheduleSync() {
+    syncHeaderState();
     if (rafPending) return;
     rafPending = true;
     requestAnimationFrame(syncDoodles);
@@ -499,6 +512,7 @@
   }
 
   function init() {
+    syncHeaderState();
     syncDoodles();
     window.addEventListener("scroll", scheduleSync, { passive: true });
     window.addEventListener("resize", scheduleSync, { passive: true });
