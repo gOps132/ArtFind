@@ -581,6 +581,7 @@ textarea {
 }
 
 .artist-card {
+  position: relative;
   background: var(--surface-raised);
   border: 2px solid var(--ink);
   border-radius: var(--radius-sketch);
@@ -591,9 +592,71 @@ textarea {
   transition: transform 180ms var(--ease-out), box-shadow 180ms var(--ease-out);
 }
 
+/* Organic sketchbook variance across cards (tilts, radii, borders, ink shadows) */
+.artist-card:nth-child(6n+1) {
+  transform: rotate(-0.55deg);
+  border-radius: 245px 16px 215px 18px / 18px 220px 15px 250px;
+  box-shadow: 3px 4px 0 var(--ink);
+}
+
+.artist-card:nth-child(6n+2) {
+  transform: rotate(0.45deg);
+  border-radius: 16px 235px 14px 225px / 225px 14px 235px 16px;
+  box-shadow: 4px 3px 0 var(--accent);
+}
+
+.artist-card:nth-child(6n+3) {
+  transform: rotate(-0.3deg);
+  border-width: 2.5px;
+  border-radius: 220px 22px 245px 12px / 14px 245px 18px 215px;
+  box-shadow: 3px 3px 0 var(--ink);
+}
+
+.artist-card:nth-child(6n+4) {
+  transform: rotate(0.6deg);
+  border-radius: 20px 210px 22px 240px / 240px 18px 210px 14px;
+  box-shadow: 4px 4px 0 oklch(0.6 0.19 28 / 0.85);
+}
+
+.artist-card:nth-child(6n+5) {
+  transform: rotate(-0.45deg);
+  border-style: dashed;
+  border-radius: 235px 14px 205px 20px / 16px 210px 20px 245px;
+  box-shadow: 3px 4px 0 var(--ink);
+}
+
+.artist-card:nth-child(6n) {
+  transform: rotate(0.25deg);
+  border-radius: 14px 240px 18px 220px / 230px 16px 225px 18px;
+  box-shadow: 4px 3px 0 oklch(0.56 0.14 162 / 0.9);
+}
+
+/* Subtle washi-tape strip on alternating cards */
+.artist-card:nth-child(3n+1)::before,
+.artist-card:nth-child(4n+2)::before {
+  content: "";
+  position: absolute;
+  top: -8px;
+  left: 50%;
+  width: 58px;
+  height: 15px;
+  transform: translateX(-50%) rotate(-3deg);
+  background: oklch(0.75 0.12 162 / 0.55);
+  border: 1px solid oklch(0.2 0.018 55 / 0.25);
+  pointer-events: none;
+  z-index: 2;
+}
+
+.artist-card:nth-child(4n+2)::before {
+  left: 26%;
+  width: 52px;
+  transform: translateX(-50%) rotate(5deg);
+  background: oklch(0.84 0.14 88 / 0.65);
+}
+
 @media (hover: hover) and (pointer: fine) {
   .artist-card:hover {
-    transform: translate(-2px, -2px);
+    transform: translate(-2px, -3px) rotate(0deg);
     box-shadow: var(--shadow-sketch-hover);
   }
 }
@@ -606,6 +669,14 @@ textarea {
   border-radius: 8px;
   overflow: hidden;
   cursor: pointer;
+}
+
+.artist-card:nth-child(3n+1) .card-media {
+  border-radius: 12px 6px 10px 6px;
+}
+
+.artist-card:nth-child(3n+2) .card-media {
+  border-radius: 6px 12px 6px 12px;
 }
 
 .card-media img {
