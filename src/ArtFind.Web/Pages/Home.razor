@@ -50,9 +50,9 @@
         <div class="brief-controls">
             <select class="filter-select" @bind="_selectedCategory" aria-label="Filter by category">
                 <option value="">All Categories</option>
-                @foreach (var cat in AvailableCategories)
+                @foreach (var item in AvailableCategories)
                 {
-                    <option value="@cat">@FormatTag(cat)</option>
+                    <option value="@item.Tag">@FormatTag(item.Tag) (@item.Count)</option>
                 }
             </select>
 
@@ -80,17 +80,79 @@
             </label>
         </div>
 
-        @if (AvailableStyles.Count > 0)
+        @if (AvailableStyles.Count > 0 || AvailableCategories.Count > 0)
         {
-            <div class="chip-row" role="group" aria-label="Style tags">
-                @foreach (var style in AvailableStyles)
+            <div class="chip-row" role="group" aria-label="Popular style tags">
+                @foreach (var item in AvailableStyles.Take(8))
                 {
-                    var isActive = _selectedStyles.Contains(style);
+                    var isActive = _selectedStyles.Contains(item.Tag);
                     <button type="button"
                             class="chip @(isActive ? "active" : "")"
-                            @onclick="() => ToggleStyle(style)">
-                        @FormatTag(style)
+                            @onclick="() => ToggleStyle(item.Tag)">
+                        @FormatTag(item.Tag)<span class="chip-count">@item.Count</span>
                     </button>
+                }
+
+                <button type="button"
+                        class="chip @(_showTagBrowser ? "active" : "")"
+                        @onclick="() => _showTagBrowser = !_showTagBrowser">
+                    @(_showTagBrowser ? "Hide Tag Search" : $"Search All Tags ({TotalTagCount})")
+                </button>
+            </div>
+        }
+
+        @if (_showTagBrowser)
+        {
+            <div class="tag-browser" aria-label="Search available tags">
+                <div class="tag-browser-header">
+                    <input class="tag-search-input"
+                           type="search"
+                           placeholder="Search available tags… e.g. anime, portrait, vtuber, chibi"
+                           @bind="_tagSearch"
+                           @bind:event="oninput" />
+                    @if (!string.IsNullOrWhiteSpace(_tagSearch))
+                    {
+                        <button type="button" class="btn btn-subtle" @onclick="() => _tagSearch = string.Empty">Clear</button>
+                    }
+                </div>
+
+                @if (FilteredStyles.Count > 0)
+                {
+                    <div class="tag-group-label">Styles (@FilteredStyles.Count)</div>
+                    <div class="chip-row" style="margin-top: 0;">
+                        @foreach (var item in FilteredStyles)
+                        {
+                            var isActive = _selectedStyles.Contains(item.Tag);
+                            <button type="button"
+                                    class="chip @(isActive ? "active" : "")"
+                                    @onclick="() => ToggleStyle(item.Tag)">
+                                @FormatTag(item.Tag)<span class="chip-count">@item.Count</span>
+                            </button>
+                        }
+                    </div>
+                }
+
+                @if (FilteredCategories.Count > 0)
+                {
+                    <div class="tag-group-label">Categories (@FilteredCategories.Count)</div>
+                    <div class="chip-row" style="margin-top: 0;">
+                        @foreach (var item in FilteredCategories)
+                        {
+                            var isActive = _selectedCategory.Equals(item.Tag, StringComparison.OrdinalIgnoreCase);
+                            <button type="button"
+                                    class="chip @(isActive ? "active" : "")"
+                                    @onclick="() => ToggleCategory(item.Tag)">
+                                @FormatTag(item.Tag)<span class="chip-count">@item.Count</span>
+                            </button>
+                        }
+                    </div>
+                }
+
+                @if (FilteredStyles.Count == 0 && FilteredCategories.Count == 0)
+                {
+                    <p style="margin: 6px 0 0; font-size: 0.82rem; color: var(--ink-muted);">
+                        No tags match "@_tagSearch". Try typing it directly into the Commission Brief box above to search artist bios.
+                    </p>
                 }
             </div>
         }
@@ -167,6 +229,8 @@
 
     private ArtistMatch? _inspectedMatch;
     private bool _showOptOut;
+    private bool _showTagBrowser;
+    private string _tagSearch = string.Empty;
 
     protected override async Task OnInitializedAsync()
     {
@@ -174,22 +238,48 @@
         _loading = false;
     }
 
-    private IReadOnlyList<string> AvailableStyles =>
+    private IReadOnlyList<(string Tag, int Count)> AvailableStyles =>
         (_snapshot?.Artists ?? [])
             .SelectMany(a => a.StyleTags)
             .GroupBy(t => t, StringComparer.OrdinalIgnoreCase)
             .OrderByDescending(g => g.Count())
-            .Select(g => g.Key)
-            .Take(10)
+            .ThenBy(g => g.Key)
+            .Select(g => (g.Key, g.Count()))
             .ToList();
 
-    private IReadOnlyList<string> AvailableCategories =>
+    private IReadOnlyList<(string Tag, int Count)> AvailableCategories =>
         (_snapshot?.Artists ?? [])
             .SelectMany(a => a.CategoryTags)
             .GroupBy(t => t, StringComparer.OrdinalIgnoreCase)
             .OrderByDescending(g => g.Count())
-            .Select(g => g.Key)
+            .ThenBy(g => g.Key)
+            .Select(g => (g.Key, g.Count()))
             .ToList();
+
+    private int TotalTagCount => AvailableStyles.Count + AvailableCategories.Count;
+
+    private IReadOnlyList<(string Tag, int Count)> FilteredStyles =>
+        string.IsNullOrWhiteSpace(_tagSearch)
+            ? AvailableStyles
+            : AvailableStyles
+                .Where(x => x.Tag.Contains(_tagSearch.Trim(), StringComparison.OrdinalIgnoreCase)
+                         || FormatTag(x.Tag).Contains(_tagSearch.Trim(), StringComparison.OrdinalIgnoreCase))
+                .ToList();
+
+    private IReadOnlyList<(string Tag, int Count)> FilteredCategories =>
+        string.IsNullOrWhiteSpace(_tagSearch)
+            ? AvailableCategories
+            : AvailableCategories
+                .Where(x => x.Tag.Contains(_tagSearch.Trim(), StringComparison.OrdinalIgnoreCase)
+                         || FormatTag(x.Tag).Contains(_tagSearch.Trim(), StringComparison.OrdinalIgnoreCase))
+                .ToList();
+
+    private void ToggleCategory(string category)
+    {
+        _selectedCategory = _selectedCategory.Equals(category, StringComparison.OrdinalIgnoreCase)
+            ? string.Empty
+            : category;
+    }
 
     private bool HasActiveFilters =>
         !string.IsNullOrWhiteSpace(_query) ||

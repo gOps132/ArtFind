@@ -348,6 +348,58 @@ textarea {
   color: #ffffff;
 }
 
+.chip-count {
+  opacity: 0.65;
+  font-size: 0.72rem;
+  margin-left: 4px;
+}
+
+.tag-browser {
+  margin-top: 12px;
+  padding: 14px;
+  border-radius: var(--radius-md);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  transform-origin: top left;
+  animation: modalEnter 180ms var(--ease-out);
+}
+
+.tag-browser-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.tag-search-input {
+  flex: 1;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 7px 14px;
+  font-size: 0.82rem;
+  color: var(--ink);
+  background: var(--surface);
+  outline: none;
+  transition: border-color 150ms ease;
+}
+
+.tag-search-input:focus {
+  border-color: var(--ink);
+}
+
+.tag-group-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--ink-muted);
+  margin: 10px 0 6px;
+}
+
+.tag-group-label:first-of-type {
+  margin-top: 0;
+}
+
 @media (hover: hover) and (pointer: fine) {
   .chip:not(.active):hover {
     border-color: var(--border-strong);
